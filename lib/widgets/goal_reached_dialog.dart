@@ -1,126 +1,16 @@
 // lib/widgets/goal_reached_dialog.dart
-//
-// Diálogo comemorativo ao atingir 100% da meta (roadmap v1.1).
-
 import 'package:flutter/material.dart';
 
-abstract final class _GoalDialogColors {
-  static const background = Color(0xFF0A0A0A);
-  static const accent = Color(0xFF448AFF);
-  static const textMuted = Color(0xFF888888);
-}
-
-/// Conteúdo do [Dialog] de meta atingida — use com [showDialog] onde precisar
-/// (ex.: tela de contribuição com feedback háptico antes de abrir).
-class GoalReachedDialog extends StatelessWidget {
+class GoalReachedDialog extends StatefulWidget {
   const GoalReachedDialog({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: _GoalDialogColors.background,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: _GoalDialogColors.accent.withValues(alpha: 0.45),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _GoalDialogColors.accent.withValues(alpha: 0.12),
-              blurRadius: 32,
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const _TrophyAnimated(),
-              const SizedBox(height: 20),
-              Text(
-                '🎯 Meta atingida!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _GoalDialogColors.accent.withValues(alpha: 0.95),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.4,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Parabéns!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Você cumpriu sua meta de economia neste mês. Continue assim!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _GoalDialogColors.textMuted,
-                  fontSize: 14,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _GoalDialogColors.accent,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Continuar',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  State<GoalReachedDialog> createState() => _GoalReachedDialogState();
 }
 
-/// Atalho com [showDialog] para outros fluxos (ex.: simulação no extrato).
-Future<void> showGoalReachedDialog(BuildContext context) {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: true,
-    barrierColor: Colors.black.withValues(alpha: 0.65),
-    builder: (ctx) => const GoalReachedDialog(),
-  );
-}
-
-/// Troféu com leve balanço e pulso de escala.
-class _TrophyAnimated extends StatefulWidget {
-  const _TrophyAnimated();
-
-  @override
-  State<_TrophyAnimated> createState() => _TrophyAnimatedState();
-}
-
-class _TrophyAnimatedState extends State<_TrophyAnimated>
+class _GoalReachedDialogState extends State<GoalReachedDialog>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+  late AnimationController _controller;
 
   @override
   void initState() {
@@ -139,39 +29,64 @@ class _TrophyAnimatedState extends State<_TrophyAnimated>
 
   @override
   Widget build(BuildContext context) {
-    final curved = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-    final rotation = Tween<double>(begin: -0.08, end: 0.08).animate(curved);
-    final scale = Tween<double>(begin: 0.94, end: 1.06).animate(curved);
-
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.rotate(
-          angle: rotation.value,
-          child: Transform.scale(
-            scale: scale.value,
-            child: child,
+    const accent = Color(0xFF448AFF);
+    
+    return AlertDialog(
+      backgroundColor: const Color(0xFF0A0A0A),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: accent, width: 1),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 10),
+          ScaleTransition(
+            scale: Tween(begin: 1.0, end: 1.2).animate(
+              CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+            ),
+            child: RotationTransition(
+              turns: Tween(begin: -0.05, end: 0.05).animate(
+                CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: accent.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.emoji_events_rounded, 
+                                 color: accent, size: 60),
+              ),
+            ),
           ),
-        );
-      },
-      child: Container(
-        width: 88,
-        height: 88,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: _GoalDialogColors.accent.withValues(alpha: 0.12),
-          border: Border.all(
-            color: _GoalDialogColors.accent.withValues(alpha: 0.35),
+          const SizedBox(height: 24),
+          const Text(
+            'META ATINGIDA!',
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
-        ),
-        child: const Icon(
-          Icons.emoji_events_rounded,
-          size: 48,
-          color: _GoalDialogColors.accent,
-        ),
+          const SizedBox(height: 12),
+          const Text(
+            'Parabéns! Você alcançou 100% do seu objetivo este mês. Continue assim!',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFF888888), fontSize: 14),
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accent,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text('Continuar Poupando', 
+                               style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
       ),
     );
   }
