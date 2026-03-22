@@ -14,12 +14,12 @@ import '../widgets/goal_reached_dialog.dart';
 /// Azul de destaque e fundo preto — identidade minimalista.
 abstract final class _TxColors {
   static const background = Color(0xFF0A0A0A);
-  static const surface    = Color(0xFF161616);
-  static const border     = Color(0xFF222222);
-  static const accent     = Color(0xFF448AFF);
-  static const accentDim  = Color(0xFF2962FF);
-  static const textMuted  = Color(0xFF555555);
-  static const textSoft   = Color(0xFF888888);
+  static const surface = Color(0xFF161616);
+  static const border = Color(0xFF222222);
+  static const accent = Color(0xFF448AFF);
+  static const accentDim = Color(0xFF2962FF);
+  static const textMuted = Color(0xFF555555);
+  static const textSoft = Color(0xFF888888);
 }
 
 /// Tela com lista de transações do [user], persistidas via [LocalStorageService].
@@ -36,8 +36,8 @@ class _TransactionListViewState extends State<TransactionListView> {
   final LocalStorageService _storage = LocalStorageService();
 
   List<ContributionModel> _transactions = [];
-  Map<String, String>     _groupNames   = {};
-  bool                    _loading      = true;
+  Map<String, String> _groupNames = {};
+  bool _loading = true;
 
   @override
   void initState() {
@@ -48,27 +48,32 @@ class _TransactionListViewState extends State<TransactionListView> {
   Future<void> _loadTransactions() async {
     setState(() => _loading = true);
     try {
-      final all    = await _storage.getContributions();
+      final all = await _storage.getContributions();
       final groups = await _storage.getGroups();
-      final names  = {for (final g in groups) g.id: g.name};
-      final mine   = all
-          .where((c) => c.userId == widget.user.id)
-          .toList()
+      final names = {for (final g in groups) g.id: g.name};
+      final mine = all.where((c) => c.userId == widget.user.id).toList()
         ..sort((a, b) => b.month.compareTo(a.month));
 
       if (!mounted) return;
       setState(() {
         _transactions = mine;
-        _groupNames   = names;
-        _loading      = false;
+        _groupNames = names;
+        _loading = false;
       });
     } on LocalStorageException catch (e) {
       if (!mounted) return;
-      setState(() { _transactions = []; _groupNames = {}; _loading = false; });
+      setState(() {
+        _transactions = [];
+        _groupNames = {};
+        _loading = false;
+      });
       _showSnack(e.message, isError: true);
     } catch (_) {
       if (!mounted) return;
-      setState(() { _transactions = []; _loading = false; });
+      setState(() {
+        _transactions = [];
+        _loading = false;
+      });
       _showSnack('Não foi possível carregar as transações. Tente novamente.',
           isError: true);
     }
@@ -78,8 +83,7 @@ class _TransactionListViewState extends State<TransactionListView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor:
-            isError ? const Color(0xFF1B1B1B) : _TxColors.surface,
+        backgroundColor: isError ? const Color(0xFF1B1B1B) : _TxColors.surface,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -108,10 +112,10 @@ class _TransactionListViewState extends State<TransactionListView> {
       final bump = DateTime.now().second % 7 * 12.5;
 
       final saveResult = await _storage.saveContribution(
-        userId:  widget.user.id,
+        userId: widget.user.id,
         groupId: target.id,
-        amount:  50 + bump,
-        goal:    200,
+        amount: 50 + bump,
+        goal: 200,
       );
 
       if (!mounted) return;
@@ -188,7 +192,8 @@ class _TransactionListViewState extends State<TransactionListView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(
-            width: 36, height: 36,
+            width: 36,
+            height: 36,
             child: CircularProgressIndicator(
                 color: _TxColors.accent, strokeWidth: 2.5),
           ),
@@ -208,7 +213,8 @@ class _TransactionListViewState extends State<TransactionListView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 72, height: 72,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
                 color: _TxColors.surface,
                 borderRadius: BorderRadius.circular(20),
@@ -250,7 +256,7 @@ class _TransactionListViewState extends State<TransactionListView> {
         itemCount: _transactions.length,
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
-          final tx        = _transactions[index];
+          final tx = _transactions[index];
           final groupName = _groupNames[tx.groupId] ?? 'Grupo';
           return _TransactionTile(contribution: tx, groupName: groupName);
         },
@@ -266,7 +272,7 @@ class _TransactionTile extends StatelessWidget {
   });
 
   final ContributionModel contribution;
-  final String            groupName;
+  final String groupName;
 
   String _money(double v) => 'R\$ ${v.toStringAsFixed(2)}';
 
@@ -283,12 +289,13 @@ class _TransactionTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: _TxColors.accentDim.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: _TxColors.accent.withValues(alpha: 0.25)),
+              border:
+                  Border.all(color: _TxColors.accent.withValues(alpha: 0.25)),
             ),
             child: const Icon(Icons.trending_up_rounded,
                 color: _TxColors.accent, size: 22),

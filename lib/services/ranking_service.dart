@@ -17,14 +17,13 @@ class RankingService {
   // ── Verifica e fecha meses pendentes ──────────────────────────────────────
   // Retorna true se fechou algum mês (para forçar reload na UI).
   Future<bool> checkAndCloseMonths(GroupModel group) async {
-    final currentMonth  = _currentMonth();
-    final existing      = await _storage.getMonthlyResults(groupId: group.id);
-    final closedMonths  = existing.map((r) => r.month).toSet();
+    final currentMonth = _currentMonth();
+    final existing = await _storage.getMonthlyResults(groupId: group.id);
+    final closedMonths = existing.map((r) => r.month).toSet();
 
-    final allContribs   = await _storage.getContributions(); // sem parâmetro
-    final groupContribs = allContribs
-        .where((c) => c.groupId == group.id)
-        .toList();
+    final allContribs = await _storage.getContributions(); // sem parâmetro
+    final groupContribs =
+        allContribs.where((c) => c.groupId == group.id).toList();
 
     final monthsToClose = groupContribs
         .map((c) => c.month)
@@ -54,7 +53,10 @@ class RankingService {
     for (final member in group.members) {
       ContributionModel? contrib;
       for (final c in monthContribs) {
-        if (c.userId == member.id) { contrib = c; break; }
+        if (c.userId == member.id) {
+          contrib = c;
+          break;
+        }
       }
       entries.add(RankingEntry(member: member, contribution: contrib));
     }
@@ -66,7 +68,7 @@ class RankingService {
 
     final snapshots = entries.asMap().entries.map((e) {
       return RankingSnapshot(
-        userId:   e.value.member.id,
+        userId: e.value.member.id,
         userName: e.value.member.name,
         progress: e.value.progress,
         position: e.key + 1,
@@ -78,11 +80,11 @@ class RankingService {
         : null;
 
     final result = MonthlyResultModel(
-      id:         _newId(),
-      groupId:    group.id,
-      month:      month,
-      ranking:    snapshots,
-      winnerId:   winner?.member.id,
+      id: _newId(),
+      groupId: group.id,
+      month: month,
+      ranking: snapshots,
+      winnerId: winner?.member.id,
       winnerName: winner?.member.name,
     );
 

@@ -67,9 +67,7 @@ class _GoalReachedDialogState extends State<GoalReachedDialog>
           const Text(
             'META ATINGIDA!',
             style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold),
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           const Text(
