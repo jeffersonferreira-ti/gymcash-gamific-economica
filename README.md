@@ -137,8 +137,6 @@ lib/
 --.
 **Pré-requisitos:** Flutter SDK `>=3.3.0` · Android SDK API 23+
 
-**Pré-requisitos:** Flutter SDK `>=3.3.0` · Android SDK API 23+
-
 ```bash
 git clone https://github.com/jluizferreira/gymcash-gamified-savings.git
 cd gymcash-gamified-savings
