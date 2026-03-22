@@ -3,7 +3,7 @@
 <img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white"/>
 <img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white"/>
 <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white"/>
-<img src="https://img.shields.io/badge/Status-MVP%20Concluído-00C853?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Status-v1.1%20Concluída-448AFF?style=for-the-badge"/>
 
 # GymCash
 
@@ -15,155 +15,72 @@
 
 ---
 
-## Visão do Produto
+## 💎 Visão do Produto (v1.1 - Evolution)
 
-O brasileiro médio não guarda dinheiro por falta de informação — ele não guarda por falta de **motivação e consistência**. Poupança é invisível, solitária e sem celebração.
+O GymCash transforma o hábito solitário de poupar em uma **experiência social premium**. O foco da versão 1.1 foi elevar o nível de polimento visual e feedback ao usuário, consolidando a identidade **Deep Black & Electric Blue**.
 
-O GymCash resolve isso transformando o hábito de guardar dinheiro em uma **competição social privada**. Grupos de amigos, colegas ou família competem mensalmente para ver quem consegue atingir melhor sua meta de economia — sem nunca revelar quanto cada um guarda de verdade.
-
-A privacidade não é uma limitação: é o núcleo do produto. O ranking exibe apenas porcentagens de progresso, tornando a competição justa independente de renda.
+A privacidade continua sendo o núcleo: o ranking exibe apenas porcentagens de progresso, garantindo uma competição justa e ética entre amigos com diferentes realidades financeiras.
 
 ---
 
-## O Problema
+## 🛠️ O que há de novo na v1.1?
 
-| Symptom | Root Cause |
-|---|---|
-| Brasileiros poupam em média 4% da renda (vs. 15–20% em países desenvolvidos) | Ausência de incentivos comportamentais |
-| 78% das pessoas abandonam metas financeiras no 2º mês | Falta de accountability social |
-| Apps de finanças têm churn altíssimo | Experiência entediante, sem progressão visível |
-| Compartilhar metas financeiras é socialmente delicado | Exposição de renda e patrimônio |
-
-> O GymCash ataca exatamente a interseção entre esses quatro problemas.
-
----
-
-## A Solução
-
-Dois conceitos centrais orientam toda a experiência:
-
-**Sprint** — competição mensal reiniciável. No início de cada mês, cada membro define sua meta. Ao final, o ranking revela quem chegou mais longe em relação à própria meta — em porcentagem, nunca em reais. O vencedor é quem foi mais disciplinado, não quem ganha mais.
-
-**Maratona** — acumulado histórico que nunca zera. Cada real guardado ao longo do tempo contribui para uma jornada de longo prazo representada por patentes progressivas e conquistas desbloqueáveis.
+| Feature | Descrição | Impacto UX |
+|---|---|---|
+| **Goal Reached Dialog** | Animação de troféu 3D-like ao bater 100% da meta mensal. | Celebração e dopamina positiva. |
+| **Achievement Toasts** | Notificações em Overlay (permanecem visíveis após navegação). | Reconhecimento imediato de progresso. |
+| **Profile & Stats** | Nova tela centralizando Patente, Streak e Total Acumulado. | Senso de identidade e evolução a longo prazo. |
+| **Transaction History** | Extrato detalhado com cores dinâmicas e design minimalista. | Transparência e controle histórico. |
+| **Haptic Engine** | Feedback tátil (vibration) integrado a ações críticas. | Sensação de robustez e app premium. |
 
 ---
 
 ## Funcionalidades Implementadas
 
-### Core
-- Onboarding sem fricção — único dado obrigatório: um nome
-- Criação e gestão de grupos com controle de membros
-- Registro de contribuição mensal com meta individual por usuário
-- Edição da contribuição dentro do mês corrente
+### Core & Gestão
+- **Onboarding sem fricção:** Único dado obrigatório é o nome, sem burocracia.
+- **Edição de Grupos:** Possibilidade de renomear grupos diretamente da Home ou Detalhes.
+- **Persistência Sênior:** Gerenciamento via `LocalStorageService` com tratamento de erros robusto em português.
 
-### Competição
-- Ranking em tempo real baseado em `progresso = amount / goal`
-- Privacidade garantida: valores em reais nunca são exibidos para outros membros
-- Fechamento automático de mês ao detectar virada — resultado imutável salvo como snapshot histórico
-- Histórico de rankings com vencedor de cada mês, expansível por período
-
-### Gamificação
-- **Streak**: sequência de meses consecutivos com contribuição, com feedback visual progressivo
-- **Patentes**: Bronze → Prata → Ouro → Platina → Diamante, baseadas no total acumulado
-- **11 Achievements**: marcos desbloqueáveis cobrindo depósitos, vitórias, streaks e patentes
-- Barra de progresso para a próxima patente com valor faltante
+### Competição & Gamificação
+- **Ranking Privado:** Progresso real baseado em `amount / goal` (porcentagem).
+- **Streak System:** Sequência de meses consecutivos com feedback visual progressivo.
+- **Sistema de Patentes:** De Bronze a Diamante, baseado no total acumulado histórico.
+- **11 Achievements:** Engine de desbloqueio em tempo real integrada ao fluxo de contribuição.
 
 ---
 
 ## Stack Técnica
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  UI Layer          Flutter 3.x + Dart 3.x (Material 3)      │
-├─────────────────────────────────────────────────────────────┤
-│  Business Logic    Services independentes (sem acoplamento)  │
-├─────────────────────────────────────────────────────────────┤
-│  Data Layer        LocalStorageService (gateway único)       │
-├─────────────────────────────────────────────────────────────┤
-│  Persistence       SharedPreferences (JSON serializado)      │
-└─────────────────────────────────────────────────────────────┘
-```
+┌─────────────────────────────────────────────────────────────┐│  UI Layer         Flutter 3.x + Custom Animations (Overlay) │├─────────────────────────────────────────────────────────────┤│  Business Logic   Services Desacoplados (DI Manual)         │├─────────────────────────────────────────────────────────────┤│  Data Layer       Gateway Único + Result Objects            │├─────────────────────────────────────────────────────────────┤│  Persistence      SharedPreferences (JSON Ops)              │└─────────────────────────────────────────────────────────────┘
+### Decisões de Engenharia (Sênior Mindset)
 
-### Decisões arquiteturais relevantes
-
-**Gateway de dados único.** Toda leitura e escrita passa pelo `LocalStorageService`. Nenhuma tela ou service acessa SharedPreferences diretamente. Isso possibilita a substituição completa da camada de persistência por Firebase sem tocar em uma única linha de UI.
-
-**Services desacoplados.** `StreakService`, `RankingService` e `AchievementService` recebem o storage por injeção de dependência. São testáveis isoladamente e agnósticos à fonte de dados.
-
-**Models com serialização bidirecional.** Todos os modelos possuem `toJson()` / `fromJson()`. A estrutura é diretamente compatível com documentos Firestore, sem necessidade de migração de schema.
+- **Result Objects:** Implementação de `ContributionSaveResult` para comunicação clara entre Service e UI sem abuso de Exceptions para fluxos de sucesso.
+- **Imutabilidade:** Uso rigoroso de `List.unmodifiable` e modelos imutáveis com suporte a `copyWith`.
+- **Overlay Engine:** Sistema de notificações (`AchievementUnlockToast`) que não depende do contexto da tela atual, garantindo que o feedback persista mesmo após trocas de rota.
 
 ---
 
-## Estrutura do Projeto
+## Estrutura do Projeto (v1.1)
 
-```
-lib/
-├── main.dart                         # Inicialização + roteamento por estado
-├── models/
-│   ├── user_model.dart
-│   ├── group_model.dart
-│   ├── contribution_model.dart       # amount, goal, month (YYYY-MM)
-│   ├── monthly_result_model.dart     # Snapshot imutável do ranking fechado
-│   ├── ranking_entry.dart            # Agregação membro + contribuição
-│   ├── achievement_model.dart        # Definições + estado de desbloqueio
-│   └── rank_model.dart               # Tabela de patentes + cálculo de progresso
-├── services/
-│   ├── local_storage_service.dart    # Gateway único — SharedPreferences
-│   ├── ranking_service.dart          # Detecção e fechamento de meses
-│   ├── streak_service.dart           # Cálculo de sequências mensais
-│   └── achievement_service.dart      # Engine de desbloqueio de conquistas
-└── screens/
-    ├── onboarding_screen.dart
-    ├── home_screen.dart              # Dashboard: acumulado, streak, patente
-    ├── create_group_screen.dart
-    ├── group_screen.dart             # 3 abas: Ranking | Membros | Histórico
-    ├── add_member_screen.dart
-    ├── add_contribution_screen.dart  # Criação e edição de contribuição
-    ├── history_screen.dart           # Meses fechados com ranking expansível
-    └── achievements_screen.dart      # Patente + conquistas
-```
-
+lib/├── models/│   ├── contribution_save_result.dart # DTO para retorno de persistência│   └── ... (user, group, contribution, achievement, rank)├── services/│   ├── local_storage_service.dart    # Gateway de dados (Single Source of Truth)│   └── ... (ranking, streak, achievement)├── widgets/                          # Componentes reutilizáveis e atômicos│   ├── achievement_unlock_toast.dart # Overlay animado│   ├── goal_reached_dialog.dart      # Alerta comemorativo 100%│   └── rename_group_dialog.dart      # Diálogo de edição de nome└── screens/├── transaction_list_view.dart    # Visão de extrato detalhado├── profile_screen.dart           # Dashboard de evolução do usuário└── ... (home, group, add_contribution)
 ---
 
 ## Como Executar
 
-### Pré-requisitos
-
-- Flutter SDK `>=3.3.0` — [flutter.dev/docs/get-started/install](https://flutter.dev/docs/get-started/install)
-- Android SDK API 23+ (Android 6.0)
-- Dispositivo físico ou emulador Android
-
-### Instalação e execução
-
 ```bash
-git clone https://github.com/seu-usuario/gymcash.git
+# Clone o repositório
+git clone [https://github.com/jluizferreira/gymcash.git](https://github.com/jluizferreira/gymcash.git)
+
+# Entre na pasta
 cd gymcash
+
+# Instale as dependências
 flutter pub get
+
+# Execute o app
 flutter run
-```
-
-### Build de produção
-
-```bash
-# APK universal (distribuição direta)
-flutter build apk --release
-
-# AAB (Google Play Store)
-flutter build appbundle --release
-```
-
----
-
-## Roadmap
-
-| Versão | Foco | Status |
-|---|---|---|
-| v1.0 | MVP local — todas as features core | ✅ Concluído |
-| v1.1 | Polimento de UX e animações | 🔄 Planejado |
-| v2.0 | Backend Firebase + autenticação Google | 📋 Especificado |
-| v2.1 | Multiusuário real + convites por link | 📋 Especificado |
-| v3.0 | Notificações push + insights financeiros | 💡 Conceitual |
-| v3.1 | Gamificação avançada (ligas, desafios) | 💡 Conceitual |
+RoadmapVersãoFocoStatusv1.0MVP local — features core✅ Concluídov1.1Polimento, Animações, Perfil e Edição✅ Concluídov1.2Ordenação de Grupos e Filtros🔄 Planejadov2.0Backend Firebase + Autenticação Google📋 Especificado
 
 Documentação completa em [`docs/ROADMAP.md`](./docs/ROADMAP.md).
 
