@@ -1,6 +1,6 @@
 # Posicionamento e Diferenciais
 
-**GymCash** · Análise de Produto · v1.1
+**GymCash** · Análise de Produto · v1.2
 
 ---
 
@@ -58,9 +58,14 @@ A decisão de isolar toda persistência em um único service (pattern gateway) t
 - A migração para Firebase não requer reescrita da lógica de negócio
 - Os models já são compatíveis com Firestore (JSON bidirecional)
 - O isolamento por `userId` já existe desde v1.0
+- IDs gerados por `IdGenerator` são compatíveis com string IDs do Firestore
 - A adição de multiusuário real (v2.0) é uma evolução, não uma refatoração
 
 Isso reduz significativamente o risco técnico da próxima fase do produto.
+
+### 5. Base de testes sólida para evolução segura
+
+A v1.2 introduz 51 casos de teste unitários cobrindo as regras de negócio críticas do produto. Isso garante que evoluções futuras (ordenação, gráficos, Firebase) não quebrem silenciosamente comportamentos existentes.
 
 ---
 
@@ -75,12 +80,13 @@ Isso reduz significativamente o risco técnico da próxima fase do produto.
 | Funciona sem cadastro de e-mail | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Histórico fechado imutável por mês | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Streak de meses consecutivos | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Cobertura de testes de negócio | ✅ | N/A | N/A | N/A | N/A |
 
 ---
 
 ## Métricas de Sucesso (Produto)
 
-Para a versão v1.0 (local), as métricas relevantes são:
+Para a versão v1.x (local), as métricas relevantes são:
 
 | Métrica | Significado | Proxy de sucesso |
 |---|---|---|
@@ -99,5 +105,6 @@ Para v2.0 (Firebase + multiusuário), métricas de crescimento passam a ser rast
 |---|---|---|---|
 | Usuário abandona após mês ruim | Alta | Alto | Maratona nunca zera — acumulado sempre cresce |
 | Grupo com apenas 1 membro ativo não tem competição real | Média | Médio | Streak e patentes individuais mantêm engajamento solo |
-| Migração para Firebase quebrar dados locais | Baixa | Alto | Arquitetura de gateway + schemas compatíveis desde v1.0 |
+| Migração para Firebase quebrar dados locais | Baixa | Alto | Arquitetura de gateway + schemas compatíveis + `IdGenerator` com formato de string desde v1.0 |
 | Fraude (usuário reporta valor falso) | Alta | Baixo | Produto é baseado em auto-declaração e confiança social — não é um produto financeiro regulado |
+| Regressão em lógica de negócio durante evoluções | Baixa | Alto | Suite de 51 testes unitários cobrindo streak, contribuições, patentes e serialização |

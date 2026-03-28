@@ -1,6 +1,6 @@
 # Regras de Negócio
 
-**GymCash** · Especificação Funcional · v1.1
+**GymCash** · Especificação Funcional · v1.2
 
 ---
 
@@ -18,7 +18,7 @@ Uma contribuição é **única por tripla** `(userId, groupId, month)`. O sistem
 saveContribution(userId, groupId, amount, goal)
   ├── Existe registro para (userId, groupId, currentMonth)?
   │     ├── SIM → atualiza amount e goal preservando o id original
-  └─── NÃO → cria novo registro com id gerado
+  └─── NÃO → cria novo registro com id gerado por IdGenerator
 ```
 
 ### Campos
@@ -138,6 +138,7 @@ Consecutividade: o mês M é consecutivo ao mês M-1 se
 - **Escopo global**: considera todos os grupos simultaneamente. Um único grupo ativo no mês é suficiente para manter a sequência.
 - **Calculado dinamicamente**: não existe campo `streakCount` armazenado. O valor é sempre derivado das contribuições existentes.
 - **Atualizado imediatamente** após cada `saveContribution`.
+- **Deduplicado por mês**: múltiplas contribuições no mesmo mês (grupos diferentes) contam como um único mês no streak.
 
 ---
 
@@ -209,6 +210,27 @@ O sistema verifica conquistas em três momentos:
 |---|---|
 | Excluir grupo | Remove o registro do grupo da lista de grupos. Contribuições e resultados mensais associados **permanecem no armazenamento** mas ficam órfãos — não são mais acessíveis pela UI. |
 | Remover membro | Remove o membro do grupo. Contribuições históricas **são preservadas** para integridade do histórico fechado. |
-| Criar grupo | O criador é adicionado automaticamente como primeiro membro. |
+| Criar grupo | O criador é adicionado automaticamente como primeiro membro. ID gerado via `IdGenerator`. |
 | Renomear grupo | Atualiza o nome no registro do grupo. Não afeta membros, contribuições ou resultados históricos. |
 | Adicionar membro duplicado | Verificado por `userId`. Operação silenciosamente ignorada. |
+
+---
+
+## RN-08 · Geração de IDs
+
+### Regra
+
+Todo ID de entidade persistida deve ser gerado via `IdGenerator.newId()`. É proibido usar `DateTime.now().microsecondsSinceEpoch.toString()` diretamente.
+
+### Formato
+
+```
+<microseconds>_<counter>
+Ex.: "1709123456789123_0"
+```
+
+### Garantias
+
+- Unicidade dentro do processo mesmo em operações síncronas consecutivas
+- Compatível com string IDs do Firestore (migração v2.0 sem alteração de schema)
+- Determinístico por sessão — o contador reinicia a cada inicialização do app, o que é aceitável dado que o timestamp já garante unicidade entre sessões

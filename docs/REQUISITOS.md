@@ -1,10 +1,10 @@
 # Especificação de Requisitos
 
-**GymCash** · Documento de Requisitos · v1.1
+**GymCash** · Documento de Requisitos · v1.2
 
 ---
 
-> Este documento especifica os requisitos funcionais e não funcionais do GymCash v1.1. Serve como contrato de comportamento esperado do sistema e referência para desenvolvimento, testes e avaliação de qualidade.
+> Este documento especifica os requisitos funcionais e não funcionais do GymCash. Serve como contrato de comportamento esperado do sistema e referência para desenvolvimento, testes e avaliação de qualidade.
 
 ---
 
@@ -74,14 +74,14 @@
 | RF06.6 | O histórico deve ser exibido em ordem cronológica decrescente (mais recente primeiro) |
 | RF06.7 | Cada mês no histórico deve ser expansível para revelar o ranking completo |
 
-### RF07 — Extrato de Transações
+### RF07 — Extrato de Contribuições
 
 | ID | Requisito |
 |---|---|
 | RF07.1 | O sistema deve exibir um extrato com todas as contribuições do usuário, ordenadas por mês (mais recente primeiro) |
-| RF07.2 | O extrato deve exibir o nome do grupo, o mês de referência, o valor guardado, a meta e o progresso de cada registro |
-| RF07.3 | O extrato deve ser acessível a partir da HomeScreen |
-| RF07.4 | O extrato deve permitir simular uma nova transação para fins de teste |
+| RF07.2 | O extrato deve exibir o nome do grupo, o mês de referência, o valor guardado, a meta, o progresso e uma barra visual de cada registro |
+| RF07.3 | Contribuições que atingiram a meta devem ser destacadas com badge visual |
+| RF07.4 | O extrato deve ser acessível a partir da HomeScreen |
 
 ### RF08 — Streak
 
@@ -156,6 +156,7 @@
 | RNF04.4 | Novas patentes devem poder ser adicionadas apenas em `RankModel.ranks` |
 | RNF04.5 | O código deve seguir a separação models / services / screens sem lógica de negócio nas telas |
 | RNF04.6 | Operações de escrita devem retornar Result Objects tipados (`ContributionSaveResult`) em vez de lançar exceções para fluxos de sucesso |
+| RNF04.7 | IDs de entidades devem ser gerados via `IdGenerator`, garantindo unicidade mesmo em operações rápidas consecutivas |
 
 ### RNF05 — Compatibilidade
 
@@ -164,3 +165,13 @@
 | RNF05.1 | O app deve suportar Android 6.0 (API 23) ou superior |
 | RNF05.2 | O app deve ser compilado com Flutter SDK `>=3.3.0` e Dart `>=3.3.0` |
 | RNF05.3 | O app deve funcionar em resoluções de tela entre 360dp e 420dp de largura |
+
+### RNF06 — Qualidade e Testes
+
+| ID | Requisito |
+|---|---|
+| RNF06.1 | Toda lógica de negócio crítica deve ter cobertura de testes unitários |
+| RNF06.2 | O suite de testes deve cobrir no mínimo: cálculo de streak, unicidade de contribuição, lógica de `goalJustReached`, progressão de patentes e serialização de modelos |
+| RNF06.3 | Testes que envolvem meses históricos devem injetar dados diretamente via `SharedPreferences.setMockInitialValues`, não via `saveContribution` |
+| RNF06.4 | O smoke test de inicialização deve verificar renderização sem exceções e validação de campos obrigatórios |
+| RNF06.5 | Todos os testes devem passar com `flutter test` sem warnings |
