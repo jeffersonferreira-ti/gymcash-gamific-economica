@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:gymcash/main.dart';
+// ignore: unused_import
 import 'package:gymcash/screens/onboarding_screen.dart';
 
 void main() {
@@ -21,9 +22,7 @@ void main() {
 
   testWidgets('App renderiza OnboardingScreen quando não há usuário salvo',
       (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const GymCashApp(initialScreen: OnboardingScreen()),
-    );
+    await tester.pumpWidget(const GymCashApp());
     await tester.pump();
 
     // Verifica que o campo de nome está presente
@@ -34,10 +33,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('OnboardingScreen valida nome vazio', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const GymCashApp(initialScreen: OnboardingScreen()),
-    );
+  testWidgets('OnboardingScreen valida nome vazio',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const GymCashApp());
     await tester.pump();
 
     // Tenta continuar sem digitar nada

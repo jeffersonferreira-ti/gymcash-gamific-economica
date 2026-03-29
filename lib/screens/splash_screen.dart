@@ -10,8 +10,8 @@ import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 import '../services/local_storage_service.dart';
 import '../services/theme_service.dart';
-import 'home_screen.dart';
 import 'onboarding_screen.dart';
+import 'main_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -27,11 +27,11 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _taglineCtrl;
   late final AnimationController _exitCtrl;
 
-  late final Animation<double>  _logoScale;
-  late final Animation<double>  _logoFade;
-  late final Animation<Offset>  _taglineSlide;
-  late final Animation<double>  _taglineFade;
-  late final Animation<double>  _exitFade;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _logoFade;
+  late final Animation<Offset> _taglineSlide;
+  late final Animation<double> _taglineFade;
+  late final Animation<double> _exitFade;
 
   UserModel? _savedUser;
 
@@ -42,26 +42,23 @@ class _SplashScreenState extends State<SplashScreen>
     // Logo: escala + fade-in em 600ms
     _logoCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
-    _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
-        CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOutBack));
-    _logoFade = CurvedAnimation(
-        parent: _logoCtrl, curve: Curves.easeOut);
+    _logoScale = Tween<double>(begin: 0.7, end: 1.0)
+        .animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOutBack));
+    _logoFade = CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOut);
 
     // Tagline: slide-up + fade-in em 500ms, começa após 400ms
     _taglineCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));
-    _taglineSlide = Tween<Offset>(
-            begin: const Offset(0, 0.4), end: Offset.zero)
-        .animate(CurvedAnimation(
-            parent: _taglineCtrl, curve: Curves.easeOutCubic));
-    _taglineFade = CurvedAnimation(
-        parent: _taglineCtrl, curve: Curves.easeOut);
+    _taglineSlide = Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _taglineCtrl, curve: Curves.easeOutCubic));
+    _taglineFade = CurvedAnimation(parent: _taglineCtrl, curve: Curves.easeOut);
 
     // Saída: fade-out em 350ms
     _exitCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 350));
-    _exitFade = Tween<double>(begin: 1.0, end: 0.0).animate(
-        CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn));
+    _exitFade = Tween<double>(begin: 1.0, end: 0.0)
+        .animate(CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn));
 
     _runSequence();
   }
@@ -101,11 +98,11 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark  = context.watch<ThemeService>().isDark;
-    final accent  = isDark ? const Color(0xFF00E676) : const Color(0xFF00C853);
-    final bg      = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5);
-    final onBg    = isDark ? Colors.white : const Color(0xFF1A1A1A);
-    final soft    = isDark ? const Color(0xFF888888) : const Color(0xFF777777);
+    final isDark = context.watch<ThemeService>().isDark;
+    final accent = isDark ? const Color(0xFF00E676) : const Color(0xFF00C853);
+    final bg = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5);
+    final onBg = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final soft = isDark ? const Color(0xFF888888) : const Color(0xFF777777);
 
     return FadeTransition(
       opacity: _exitFade,
@@ -121,13 +118,14 @@ class _SplashScreenState extends State<SplashScreen>
                 child: FadeTransition(
                   opacity: _logoFade,
                   child: Container(
-                    width: 96, height: 96,
+                    width: 96,
+                    height: 96,
                     decoration: BoxDecoration(
-                      color:        accent,
+                      color: accent,
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color:      accent.withValues(alpha: 0.35),
+                          color: accent.withValues(alpha: 0.35),
                           blurRadius: 32,
                           spreadRadius: 4,
                         ),
@@ -150,9 +148,9 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Text(
                   'GymCash',
                   style: TextStyle(
-                    color:       onBg,
-                    fontSize:    32,
-                    fontWeight:  FontWeight.w800,
+                    color: onBg,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: -1,
                   ),
                 ),
@@ -168,7 +166,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Text(
                     'Poupe mais. Compita com amigos.',
                     style: TextStyle(
-                      color:    soft,
+                      color: soft,
                       fontSize: 15,
                     ),
                   ),
@@ -187,7 +185,7 @@ class _SplashScreenState extends State<SplashScreen>
               'v1.2.0',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color:    soft.withValues(alpha: 0.5),
+                color: soft.withValues(alpha: 0.5),
                 fontSize: 12,
               ),
             ),

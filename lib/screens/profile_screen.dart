@@ -27,14 +27,14 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final LocalStorageService _storage = LocalStorageService();
 
-  bool    _loading      = true;
+  bool _loading = true;
   String? _errorMessage;
 
-  double                  _totalAccumulated = 0;
-  int                     _streak           = 0;
-  int                     _unlockedCount    = 0;
-  RankModel?              _rank;
-  List<ContributionModel> _contributions    = [];
+  double _totalAccumulated = 0;
+  int _streak = 0;
+  int _unlockedCount = 0;
+  RankModel? _rank;
+  List<ContributionModel> _contributions = [];
 
   @override
   void initState() {
@@ -44,29 +44,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _load() async {
     setState(() {
-      _loading      = true;
+      _loading = true;
       _errorMessage = null;
     });
 
     try {
-      final total          = await _storage.getTotalAccumulated(widget.user.id);
-      final streak         = await StreakService(_storage).calculateStreak(widget.user.id);
-      final newlyUnlocked  = await AchievementService(_storage).checkAndUnlock(widget.user.id);
-      final unlocked       = await AchievementService(_storage).unlockedCount(widget.user.id);
-      final rank           = RankModel.fromTotal(total);
-      final allContribs    = await _storage.getContributions();
-      final userContribs   = allContribs
-          .where((c) => c.userId == widget.user.id)
-          .toList();
+      final total = await _storage.getTotalAccumulated(widget.user.id);
+      final streak =
+          await StreakService(_storage).calculateStreak(widget.user.id);
+      final newlyUnlocked =
+          await AchievementService(_storage).checkAndUnlock(widget.user.id);
+      final unlocked =
+          await AchievementService(_storage).unlockedCount(widget.user.id);
+      final rank = RankModel.fromTotal(total);
+      final allContribs = await _storage.getContributions();
+      final userContribs =
+          allContribs.where((c) => c.userId == widget.user.id).toList();
 
       if (!mounted) return;
       setState(() {
         _totalAccumulated = total;
-        _streak           = streak;
-        _unlockedCount    = unlocked;
-        _rank             = rank;
-        _contributions    = userContribs;
-        _loading          = false;
+        _streak = streak;
+        _unlockedCount = unlocked;
+        _rank = rank;
+        _contributions = userContribs;
+        _loading = false;
       });
 
       if (newlyUnlocked.isNotEmpty) {
@@ -78,13 +80,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } on LocalStorageException catch (e) {
       if (!mounted) return;
       setState(() {
-        _loading      = false;
+        _loading = false;
         _errorMessage = e.message;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _loading      = false;
+        _loading = false;
         _errorMessage =
             'Não foi possível carregar seu perfil. Verifique o armazenamento e tente novamente.';
       });
@@ -142,16 +144,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _ProfileStreakCard(streak: _streak),
                         const SizedBox(height: 12),
                         if (_rank != null)
-                          _ProfileRankCard(rank: _rank!, total: _totalAccumulated),
+                          _ProfileRankCard(
+                              rank: _rank!, total: _totalAccumulated),
                         const SizedBox(height: 12),
                         _ProfileAchievementsCard(
                           unlocked: _unlockedCount,
-                          total:    AchievementModel.all.length,
-                          onOpen:   _openAchievements,
+                          total: AchievementModel.all.length,
+                          onOpen: _openAchievements,
                         ),
                         const SizedBox(height: 20),
                         // ── Gráficos ──────────────────────────────────────
-                        _SectionTitle(title: 'Evolução'),
+                        const _SectionTitle(title: 'Evolução'),
                         const SizedBox(height: 12),
                         EvolutionChart(contributions: _contributions),
                         const SizedBox(height: 12),
@@ -204,8 +207,8 @@ class _MonthlyStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (contributions.isEmpty) return const SizedBox.shrink();
 
-    final months      = contributions.map((c) => c.month).toSet().length;
-    final goalsHit    = contributions.where((c) => c.progress >= 1.0).length;
+    final months = contributions.map((c) => c.month).toSet().length;
+    final goalsHit = contributions.where((c) => c.progress >= 1.0).length;
     final totalGroups = contributions.map((c) => c.groupId).toSet().length;
     final avgProgress = contributions.isEmpty
         ? 0.0
@@ -237,14 +240,14 @@ class _MonthlyStatsCard extends StatelessWidget {
                 child: _StatItem(
                   value: '$months',
                   label: 'Meses ativos',
-                  icon:  Icons.calendar_month_outlined,
+                  icon: Icons.calendar_month_outlined,
                 ),
               ),
               Expanded(
                 child: _StatItem(
                   value: '$goalsHit',
                   label: 'Metas atingidas',
-                  icon:  Icons.flag_outlined,
+                  icon: Icons.flag_outlined,
                   highlight: goalsHit > 0,
                 ),
               ),
@@ -252,14 +255,14 @@ class _MonthlyStatsCard extends StatelessWidget {
                 child: _StatItem(
                   value: '$totalGroups',
                   label: 'Grupos ativos',
-                  icon:  Icons.group_outlined,
+                  icon: Icons.group_outlined,
                 ),
               ),
               Expanded(
                 child: _StatItem(
                   value: '${(avgProgress * 100).toStringAsFixed(0)}%',
                   label: 'Média de progresso',
-                  icon:  Icons.trending_up_rounded,
+                  icon: Icons.trending_up_rounded,
                   highlight: avgProgress >= 1.0,
                 ),
               ),
@@ -279,10 +282,10 @@ class _StatItem extends StatelessWidget {
     this.highlight = false,
   });
 
-  final String  value;
-  final String  label;
+  final String value;
+  final String label;
   final IconData icon;
-  final bool    highlight;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +319,7 @@ class _StatItem extends StatelessWidget {
 // ── Erro + retry ──────────────────────────────────────────────────────────────
 class _ProfileErrorState extends StatelessWidget {
   const _ProfileErrorState({required this.message, required this.onRetry});
-  final String               message;
+  final String message;
   final Future<void> Function() onRetry;
 
   @override
@@ -336,14 +339,14 @@ class _ProfileErrorState extends StatelessWidget {
         const SizedBox(height: 28),
         FilledButton.icon(
           onPressed: () => onRetry(),
-          icon:  const Icon(Icons.refresh_rounded),
+          icon: const Icon(Icons.refresh_rounded),
           label: const Text('Tentar novamente'),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00E676),
             foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
         ),
       ],
@@ -361,7 +364,8 @@ class _ProfileHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 64, height: 64,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             color: const Color(0xFF00E676).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16),
@@ -405,10 +409,10 @@ class _ProfileAccumulatedCard extends StatelessWidget {
   final double total;
 
   static String _formatCurrency(double value) {
-    final parts   = value.toStringAsFixed(2).split('.');
+    final parts = value.toStringAsFixed(2).split('.');
     final intPart = parts[0];
-    final dec     = parts[1];
-    final buffer  = StringBuffer();
+    final dec = parts[1];
+    final buffer = StringBuffer();
     for (int i = 0; i < intPart.length; i++) {
       if (i > 0 && (intPart.length - i) % 3 == 0) buffer.write('.');
       buffer.write(intPart[i]);
@@ -428,16 +432,17 @@ class _ProfileAccumulatedCard extends StatelessWidget {
             const Color(0xFF00E676).withValues(alpha: 0.04),
           ],
           begin: Alignment.topLeft,
-          end:   Alignment.bottomRight,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: const Color(0xFF00E676).withValues(alpha: 0.25)),
+        border:
+            Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: const Color(0xFF00E676).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
@@ -484,15 +489,15 @@ class _ProfileStreakCard extends StatelessWidget {
 
   String get _emoji {
     if (streak == 0) return '💤';
-    if (streak < 3)  return '🔥';
-    if (streak < 6)  return '🔥🔥';
+    if (streak < 3) return '🔥';
+    if (streak < 6) return '🔥🔥';
     return '🔥🔥🔥';
   }
 
   Color get _color {
     if (streak == 0) return const Color(0xFF444444);
-    if (streak < 3)  return const Color(0xFFFF6B35);
-    if (streak < 6)  return const Color(0xFFFF4500);
+    if (streak < 3) return const Color(0xFFFF6B35);
+    if (streak < 6) return const Color(0xFFFF4500);
     return const Color(0xFFFF2200);
   }
 
@@ -515,14 +520,14 @@ class _ProfileStreakCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: _color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-                child: Text(_emoji,
-                    style: const TextStyle(fontSize: 20))),
+                child: Text(_emoji, style: const TextStyle(fontSize: 20))),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -537,9 +542,8 @@ class _ProfileStreakCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(_label,
                     style: TextStyle(
-                        color: streak > 0
-                            ? Colors.white
-                            : const Color(0xFF555555),
+                        color:
+                            streak > 0 ? Colors.white : const Color(0xFF555555),
                         fontSize: 16,
                         fontWeight: FontWeight.w700)),
               ],
@@ -547,8 +551,7 @@ class _ProfileStreakCard extends StatelessWidget {
           ),
           if (streak > 0)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: _color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
@@ -569,12 +572,12 @@ class _ProfileStreakCard extends StatelessWidget {
 class _ProfileRankCard extends StatelessWidget {
   const _ProfileRankCard({required this.rank, required this.total});
   final RankModel rank;
-  final double    total;
+  final double total;
 
   String _fmtInt(double v) {
-    final s    = v.toStringAsFixed(0);
+    final s = v.toStringAsFixed(0);
     final parts = s.split('');
-    final buf   = StringBuffer();
+    final buf = StringBuffer();
     for (int i = 0; i < parts.length; i++) {
       if (i > 0 && (parts.length - i) % 3 == 0) buf.write('.');
       buf.write(parts[i]);
@@ -584,8 +587,8 @@ class _ProfileRankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color    = Color(rank.colorValue);
-    final next     = RankModel.nextRank(rank);
+    final color = Color(rank.colorValue);
+    final next = RankModel.nextRank(rank);
     final progress = RankModel.progressToNext(total);
 
     return Container(
@@ -597,7 +600,7 @@ class _ProfileRankCard extends StatelessWidget {
             color.withValues(alpha: 0.04),
           ],
           begin: Alignment.topLeft,
-          end:   Alignment.bottomRight,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.35)),
@@ -645,10 +648,10 @@ class _ProfileRankCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value:       progress,
-                minHeight:   6,
+                value: progress,
+                minHeight: 6,
                 backgroundColor: const Color(0xFF222222),
-                valueColor:  AlwaysStoppedAnimation<Color>(color),
+                valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
           ] else
@@ -673,8 +676,8 @@ class _ProfileAchievementsCard extends StatelessWidget {
     required this.total,
     required this.onOpen,
   });
-  final int          unlocked;
-  final int          total;
+  final int unlocked;
+  final int total;
   final VoidCallback onOpen;
 
   @override
@@ -685,8 +688,7 @@ class _ProfileAchievementsCard extends StatelessWidget {
         onTap: onOpen,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
             color: const Color(0xFF161616),
             borderRadius: BorderRadius.circular(16),
@@ -695,7 +697,8 @@ class _ProfileAchievementsCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: const Color(0xFF00E676).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),

@@ -1,53 +1,46 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'models/user_model.dart';
-import 'services/local_storage_service.dart';
+import 'package:provider/provider.dart';
+
 import 'screens/onboarding_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
+import 'services/theme_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final storage = LocalStorageService();
-  UserModel? savedUser;
-  try {
-    savedUser = await storage.getUser();
-  } catch (e, st) {
-    debugPrint('GymCash → falha ao ler usuário: $e\n$st');
-    savedUser = null;
-  }
-
-  debugPrint('GymCash → usuário salvo: ${savedUser?.name ?? "nenhum"}');
+  // Carrega preferência de tema antes de exibir qualquer tela
+  final themeService = ThemeService();
+  await themeService.load();
 
   runApp(
-    GymCashApp(
-      initialScreen: savedUser != null
-          ? HomeScreen(user: savedUser)
-          : const OnboardingScreen(),
+    ChangeNotifierProvider<ThemeService>.value(
+      value: themeService,
+      child: const GymCashApp(),
     ),
   );
 }
 
 class GymCashApp extends StatelessWidget {
-  final Widget initialScreen;
-  const GymCashApp({super.key, required this.initialScreen});
+  const GymCashApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeService = context.watch<ThemeService>();
+
     return MaterialApp(
       title: 'GymCash',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF00E676),
-          surface: Color(0xFF161616),
-        ),
-      ),
-      home: initialScreen,
+      themeMode: themeService.mode,
+      theme: ThemeService.lightTheme,
+      darkTheme: ThemeService.darkTheme,
+      // Rota raiz — usada pelo reset completo em SettingsScreen
+      initialRoute: '/',
+      routes: {
+        '/': (_) => const SplashScreen(),
+        '/onboarding': (_) => const OnboardingScreen(),
+      },
     );
   }
 }

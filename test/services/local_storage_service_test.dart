@@ -62,7 +62,8 @@ void main() {
   });
 
   group('saveContribution — goalJustReached', () {
-    test('goalJustReached é true quando amount >= goal na primeira vez', () async {
+    test('goalJustReached é true quando amount >= goal na primeira vez',
+        () async {
       final storage = LocalStorageService();
       final result = await storage.saveContribution(
           userId: 'u1', groupId: 'g1', amount: 200, goal: 200);
@@ -132,7 +133,7 @@ void main() {
   group('grupos — CRUD', () {
     test('cria grupo com criador como primeiro membro', () async {
       final storage = LocalStorageService();
-      final creator = const UserModel(id: 'u1', name: 'Jefferson');
+      const creator = UserModel(id: 'u1', name: 'Jefferson');
       final group = await storage.createGroup('Turma A', creator: creator);
 
       expect(group.name, 'Turma A');
@@ -142,7 +143,7 @@ void main() {
 
     test('adiciona membro ao grupo existente', () async {
       final storage = LocalStorageService();
-      final creator = const UserModel(id: 'u1', name: 'Jefferson');
+      const creator = UserModel(id: 'u1', name: 'Jefferson');
       final group = await storage.createGroup('Turma A', creator: creator);
 
       final updated = await storage.addMember(group.id, 'Ana');
@@ -152,7 +153,7 @@ void main() {
 
     test('remove membro do grupo', () async {
       final storage = LocalStorageService();
-      final creator = const UserModel(id: 'u1', name: 'Jefferson');
+      const creator = UserModel(id: 'u1', name: 'Jefferson');
       final group = await storage.createGroup('Turma A', creator: creator);
       final updated = await storage.addMember(group.id, 'Ana');
       final anaId = updated.members.last.id;
@@ -164,7 +165,7 @@ void main() {
 
     test('renomeia grupo corretamente', () async {
       final storage = LocalStorageService();
-      final creator = const UserModel(id: 'u1', name: 'Jefferson');
+      const creator = UserModel(id: 'u1', name: 'Jefferson');
       final group = await storage.createGroup('Nome Antigo', creator: creator);
 
       final renamed = await storage.renameGroup(group.id, 'Nome Novo');
@@ -173,7 +174,7 @@ void main() {
 
     test('exclui grupo', () async {
       final storage = LocalStorageService();
-      final creator = const UserModel(id: 'u1', name: 'Jefferson');
+      const creator = UserModel(id: 'u1', name: 'Jefferson');
       final group = await storage.createGroup('Para Excluir', creator: creator);
 
       await storage.deleteGroup(group.id);
@@ -194,7 +195,7 @@ void main() {
   group('usuário — persistência', () {
     test('salva e recupera usuário', () async {
       final storage = LocalStorageService();
-      final user = const UserModel(id: 'u1', name: 'Jefferson');
+      const user = UserModel(id: 'u1', name: 'Jefferson');
       await storage.saveUser(user);
 
       final recovered = await storage.getUser();
