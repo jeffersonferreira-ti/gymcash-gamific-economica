@@ -1,19 +1,17 @@
 // lib/widgets/achievement_unlock_toast.dart
 //
-// Toast animado ao desbloquear conquista (roadmap v1.1). Usa Overlay na raiz
-// para continuar visível após pop de rota (ex.: voltar da contribuição).
+// Toast animado ao desbloquear conquista. Usa Overlay na raiz
+// para continuar visível após pop de rota.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/achievement_model.dart';
+import '../services/theme_service.dart';
 
-/// Exibe toasts em sequência para cada conquista recém-desbloqueada.
 abstract final class AchievementUnlockToast {
   AchievementUnlockToast._();
 
-  /// Enfileira um toast por item; ids desconhecidos são ignorados.
-  /// Usa [rootOverlay] para o banner sobreviver a `Navigator.pop` imediato.
   static void showSequence(BuildContext context, List<String> unlockedIds) {
     final items = <AchievementModel>[];
     for (final id in unlockedIds) {
@@ -66,7 +64,7 @@ class _UnlockToastOverlay extends StatefulWidget {
   });
 
   final AchievementModel achievement;
-  final VoidCallback onDismissed;
+  final VoidCallback     onDismissed;
 
   @override
   State<_UnlockToastOverlay> createState() => _UnlockToastOverlayState();
@@ -74,7 +72,7 @@ class _UnlockToastOverlay extends StatefulWidget {
 
 class _UnlockToastOverlayState extends State<_UnlockToastOverlay>
     with SingleTickerProviderStateMixin {
-  static const _hold = Duration(milliseconds: 2400);
+  static const _hold  = Duration(milliseconds: 2400);
   static const _inOut = Duration(milliseconds: 420);
 
   late final AnimationController _controller;
@@ -87,13 +85,13 @@ class _UnlockToastOverlayState extends State<_UnlockToastOverlay>
     super.initState();
     _controller = AnimationController(vsync: this, duration: _inOut);
     _fade = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
+      parent:       _controller,
+      curve:        Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
     _slide = Tween<Offset>(
       begin: const Offset(0, -1.15),
-      end: Offset.zero,
+      end:   Offset.zero,
     ).animate(_fade);
     _scale = Tween<double>(begin: 0.88, end: 1).animate(_fade);
 
@@ -114,12 +112,21 @@ class _UnlockToastOverlayState extends State<_UnlockToastOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.paddingOf(context).top + 12;
+    // O toast vive no Overlay raiz — precisa ler o tema pelo contexto do app
+    final colors = Theme.of(context).extension<GymCashColors>();
+    final top    = MediaQuery.paddingOf(context).top + 12;
+
+    // Fallback para dark se o tema não estiver disponível no overlay
+    final surface   = colors?.surface   ?? const Color(0xFF1C1C2E);
+    final accent    = colors?.accent    ?? const Color(0xFF8B5CF6);
+    final highlight = colors?.highlight ?? const Color(0xFFEC4899);
+    final textSoft  = colors?.textSoft  ?? const Color(0xFF8888AA);
+    final border    = colors?.border    ?? const Color(0xFF2A2A3E);
 
     return Positioned(
-      left: 16,
+      left:  16,
       right: 16,
-      top: top,
+      top:   top,
       child: SlideTransition(
         position: _slide,
         child: FadeTransition(
@@ -128,24 +135,20 @@ class _UnlockToastOverlayState extends State<_UnlockToastOverlay>
             color: Colors.transparent,
             child: Semantics(
               liveRegion: true,
-              label:
-                  'Conquista desbloqueada: ${widget.achievement.title}',
+              label: 'Conquista desbloqueada: ${widget.achievement.title}',
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 16,
-                ),
+                    horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161616),
+                  color:        surface,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: const Color(0xFF00E676).withValues(alpha: 0.35),
-                  ),
+                      color: highlight.withValues(alpha: 0.4)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.45),
+                      color:      Colors.black.withValues(alpha: 0.4),
                       blurRadius: 24,
-                      offset: const Offset(0, 10),
+                      offset:     const Offset(0, 10),
                     ),
                   ],
                 ),
@@ -162,35 +165,35 @@ class _UnlockToastOverlayState extends State<_UnlockToastOverlay>
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisSize:       MainAxisSize.min,
                         children: [
                           Text(
                             'Conquista desbloqueada!',
                             style: TextStyle(
-                              color: const Color(0xFF00E676)
-                                  .withValues(alpha: 0.95),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              color:         highlight,
+                              fontSize:      12,
+                              fontWeight:    FontWeight.w600,
                               letterSpacing: 0.3,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             widget.achievement.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 17,
+                            style: TextStyle(
+                              color:      Theme.of(context)
+                                  .colorScheme
+                                  .onSurface,
+                              fontSize:   17,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             widget.achievement.description,
-                            style: const TextStyle(
-                              color: Color(0xFF888888),
-                              fontSize: 13,
-                              height: 1.35,
-                            ),
+                            style: TextStyle(
+                                color:    textSoft,
+                                fontSize: 13,
+                                height:   1.35),
                           ),
                         ],
                       ),

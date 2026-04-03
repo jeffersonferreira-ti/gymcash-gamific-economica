@@ -1,9 +1,9 @@
 // lib/widgets/goal_reached_dialog.dart
-import 'package:flutter/material.dart';
 
-/// Exibe um diálogo animado ao atingir a meta do mês.
-/// Pode ser chamado como widget via [showDialog] ou pela função de conveniência
-/// [showGoalReachedDialog].
+import 'package:flutter/material.dart';
+import '../services/theme_service.dart';
+
+/// Diálogo animado exibido ao atingir a meta do mês.
 class GoalReachedDialog extends StatefulWidget {
   const GoalReachedDialog({super.key});
 
@@ -19,7 +19,7 @@ class _GoalReachedDialogState extends State<GoalReachedDialog>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      vsync: this,
+      vsync:    this,
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
   }
@@ -32,60 +32,76 @@ class _GoalReachedDialogState extends State<GoalReachedDialog>
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF448AFF);
+    final colors    = Theme.of(context).extension<GymCashColors>()!;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark    = Theme.of(context).brightness == Brightness.dark;
+
+    // Usa highlight (Rosa Choque) para metas atingidas
+    final accent = colors.highlight;
 
     return AlertDialog(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: colors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: const BorderSide(color: accent, width: 1),
+        side: BorderSide(color: accent.withValues(alpha: 0.5), width: 1),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 10),
+
+          // Ícone animado
           ScaleTransition(
             scale: Tween(begin: 1.0, end: 1.2).animate(
-              CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+              CurvedAnimation(
+                  parent: _controller, curve: Curves.easeInOut),
             ),
             child: RotationTransition(
               turns: Tween(begin: -0.05, end: 0.05).animate(
-                CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+                CurvedAnimation(
+                    parent: _controller, curve: Curves.easeInOut),
               ),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.1), // corrigido
-                  shape: BoxShape.circle,
+                  color:  accent.withValues(alpha: 0.12),
+                  shape:  BoxShape.circle,
                 ),
-                child: const Icon(Icons.emoji_events_rounded,
+                child: Icon(Icons.emoji_events_rounded,
                     color: accent, size: 60),
               ),
             ),
           ),
+
           const SizedBox(height: 24),
-          const Text(
+
+          Text(
             'META ATINGIDA!',
             style: TextStyle(
-                color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                color:      onSurface,
+                fontSize:   20,
+                fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Parabéns! Você alcançou 100% do seu objetivo este mês. Continue assim!',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF888888), fontSize: 14),
+            style: TextStyle(
+                color: colors.textSoft, fontSize: 14),
           ),
           const SizedBox(height: 30),
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: accent,
-                foregroundColor: Colors.black,
+                foregroundColor: isDark ? Colors.black : Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
               ),
               child: const Text('Continuar Poupando',
                   style: TextStyle(fontWeight: FontWeight.bold)),
@@ -100,9 +116,9 @@ class _GoalReachedDialogState extends State<GoalReachedDialog>
 /// Função de conveniência para abrir o diálogo de meta atingida.
 Future<void> showGoalReachedDialog(BuildContext context) {
   return showDialog<void>(
-    context: context,
+    context:            context,
     barrierDismissible: true,
-    barrierColor: Colors.black.withValues(alpha: 0.65),
-    builder: (_) => const GoalReachedDialog(),
+    barrierColor:       Colors.black.withValues(alpha: 0.65),
+    builder: (_)        => const GoalReachedDialog(),
   );
 }

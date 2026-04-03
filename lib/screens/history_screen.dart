@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import '../models/monthly_result_model.dart';
 import '../services/local_storage_service.dart';
+import '../services/theme_service.dart';
 
 class HistoryScreen extends StatefulWidget {
   final String groupId;
@@ -33,51 +34,52 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _load() async {
-    final results = await _storage.getMonthlyResults(groupId: widget.groupId);
+    final results =
+        await _storage.getMonthlyResults(groupId: widget.groupId);
     if (mounted) {
       setState(() {
-        _results = results;
-        _loading = false;
+        _results  = results;
+        _loading  = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<GymCashColors>()!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0A),
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: colors.background,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Histórico',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
             Text(widget.groupName,
-                style: const TextStyle(color: Color(0xFF555555), fontSize: 12)),
+                style: TextStyle(
+                    color: colors.textSoft, fontSize: 12)),
           ],
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon:      const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SafeArea(
         child: _loading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
-                    color: Color(0xFF00E676), strokeWidth: 2))
+                    color: colors.accent, strokeWidth: 2))
             : _results.isEmpty
-                ? _buildEmpty()
-                : _buildList(),
+                ? _buildEmpty(colors)
+                : _buildList(colors),
       ),
     );
   }
 
-  // ── Estado vazio ───────────────────────────────────────────────────────────
-  Widget _buildEmpty() {
+  Widget _buildEmpty(GymCashColors colors) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -85,28 +87,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 72,
-              height: 72,
+              width: 72, height: 72,
               decoration: BoxDecoration(
-                color: const Color(0xFF161616),
+                color:        colors.surface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF222222)),
+                border:       Border.all(color: colors.border),
               ),
-              child: const Icon(Icons.history_rounded,
-                  color: Color(0xFF333333), size: 36),
+              child: Icon(Icons.history_rounded,
+                  color: colors.textMuted, size: 36),
             ),
             const SizedBox(height: 16),
-            const Text('Nenhum mês fechado ainda',
+            Text('Nenhum mês fechado ainda',
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
+                    color:      Theme.of(context).colorScheme.onSurface,
+                    fontSize:   17,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'O ranking do mês é salvo\nautomaticamente quando o mês vira.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Color(0xFF555555), fontSize: 13, height: 1.6),
+                  color: colors.textSoft, fontSize: 13, height: 1.6),
             ),
           ],
         ),
@@ -114,21 +115,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // ── Lista de meses fechados ────────────────────────────────────────────────
-  Widget _buildList() {
+  Widget _buildList(GymCashColors colors) {
     return ListView.separated(
-      padding: const EdgeInsets.all(24),
-      itemCount: _results.length,
+      padding:          const EdgeInsets.all(24),
+      itemCount:        _results.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => _MonthCard(result: _results[i]),
+      itemBuilder:      (_, i)  => _MonthCard(
+          result: _results[i], colors: colors),
     );
   }
 }
 
-// ── Card expansível de um mês ──────────────────────────────────────────────────
+// ── Card expansível de um mês ─────────────────────────────────────────────────
 class _MonthCard extends StatefulWidget {
+  const _MonthCard({required this.result, required this.colors});
   final MonthlyResultModel result;
-  const _MonthCard({required this.result});
+  final GymCashColors      colors;
 
   @override
   State<_MonthCard> createState() => _MonthCardState();
@@ -139,60 +141,60 @@ class _MonthCardState extends State<_MonthCard> {
 
   @override
   Widget build(BuildContext context) {
-    final result = widget.result;
+    final result    = widget.result;
+    final colors    = widget.colors;
     final hasWinner = result.winnerId != null;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    // Cor do troféu: dourado para vencedor, muted para sem vencedor
+    const gold = Color(0xFFFFD700);
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF161616),
+        color:        colors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: hasWinner
-              ? const Color(0xFFFFD700).withValues(alpha: 0.25)
-              : const Color(0xFF1E1E1E),
+              ? gold.withValues(alpha: 0.25)
+              : colors.border,
         ),
       ),
       child: Column(
         children: [
-          // ── Header do card ───────────────────────────────────────────────
+          // ── Header ──────────────────────────────────────────────────────
           InkWell(
-            onTap: () => setState(() => _expanded = !_expanded),
+            onTap:        () => setState(() => _expanded = !_expanded),
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  // Troféu / ícone
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 44, height: 44,
                     decoration: BoxDecoration(
                       color: hasWinner
-                          ? const Color(0xFFFFD700).withValues(alpha: 0.1)
-                          : const Color(0xFF222222),
+                          ? gold.withValues(alpha: 0.1)
+                          : colors.surfaceHigh,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       hasWinner
                           ? Icons.emoji_events_rounded
                           : Icons.remove_circle_outline_rounded,
-                      color: hasWinner
-                          ? const Color(0xFFFFD700)
-                          : const Color(0xFF444444),
-                      size: 22,
+                      color: hasWinner ? gold : colors.textMuted,
+                      size:  22,
                     ),
                   ),
                   const SizedBox(width: 14),
 
-                  // Mês e vencedor
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(result.monthLabel,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
+                            style: TextStyle(
+                                color:      onSurface,
+                                fontSize:   16,
                                 fontWeight: FontWeight.w700)),
                         const SizedBox(height: 3),
                         Text(
@@ -200,10 +202,8 @@ class _MonthCardState extends State<_MonthCard> {
                               ? '🥇 ${result.winnerName}'
                               : 'Sem vencedor',
                           style: TextStyle(
-                            color: hasWinner
-                                ? const Color(0xFFFFD700)
-                                : const Color(0xFF444444),
-                            fontSize: 13,
+                            color:      hasWinner ? gold : colors.textMuted,
+                            fontSize:   13,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -211,12 +211,11 @@ class _MonthCardState extends State<_MonthCard> {
                     ),
                   ),
 
-                  // Chevron animado
                   AnimatedRotation(
-                    turns: _expanded ? 0.5 : 0,
+                    turns:    _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        color: Color(0xFF444444), size: 22),
+                    child: Icon(Icons.keyboard_arrow_down_rounded,
+                        color: colors.textMuted, size: 22),
                   ),
                 ],
               ),
@@ -224,20 +223,29 @@ class _MonthCardState extends State<_MonthCard> {
           ),
 
           // ── Ranking expandido ────────────────────────────────────────────
-          if (_expanded) ...[
-            const Divider(color: Color(0xFF1E1E1E), height: 1),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                children: result.ranking.map((snap) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _RankRow(snapshot: snap),
-                  );
-                }).toList(),
-              ),
+          AnimatedCrossFade(
+            firstChild:  const SizedBox(width: double.infinity, height: 0),
+            secondChild: Column(
+              children: [
+                Divider(color: colors.border, height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    children: result.ranking.map((snap) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _RankRow(
+                              snapshot: snap, colors: colors),
+                        )).toList(),
+                  ),
+                ),
+              ],
             ),
-          ],
+            crossFadeState: _expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration:  const Duration(milliseconds: 250),
+            sizeCurve: Curves.easeOutCubic,
+          ),
         ],
       ),
     );
@@ -246,19 +254,16 @@ class _MonthCardState extends State<_MonthCard> {
 
 // ── Linha do ranking no histórico ─────────────────────────────────────────────
 class _RankRow extends StatelessWidget {
+  const _RankRow({required this.snapshot, required this.colors});
   final RankingSnapshot snapshot;
-  const _RankRow({required this.snapshot});
+  final GymCashColors   colors;
 
   String _medal(int pos) {
     switch (pos) {
-      case 1:
-        return '🥇';
-      case 2:
-        return '🥈';
-      case 3:
-        return '🥉';
-      default:
-        return '$pos°';
+      case 1:  return '🥇';
+      case 2:  return '🥈';
+      case 3:  return '🥉';
+      default: return '$pos°';
     }
   }
 
@@ -272,7 +277,9 @@ class _RankRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFirst = snapshot.position == 1;
+    final isFirst   = snapshot.position == 1;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final reached   = snapshot.progress >= 1.0;
 
     return Row(
       children: [
@@ -282,8 +289,8 @@ class _RankRow extends StatelessWidget {
           child: Text(
             _medal(snapshot.position),
             style: TextStyle(
-              fontSize: snapshot.position <= 3 ? 18 : 13,
-              color: const Color(0xFF555555),
+              fontSize:   snapshot.position <= 3 ? 18 : 13,
+              color:      colors.textMuted,
               fontWeight: FontWeight.w700,
             ),
             textAlign: TextAlign.center,
@@ -293,12 +300,12 @@ class _RankRow extends StatelessWidget {
 
         // Avatar
         CircleAvatar(
-          radius: 16,
-          backgroundColor: const Color(0xFF00E676).withValues(alpha: 0.1),
+          radius:          16,
+          backgroundColor: colors.accent.withValues(alpha: 0.12),
           child: Text(_initials,
-              style: const TextStyle(
-                  color: Color(0xFF00E676),
-                  fontSize: 11,
+              style: TextStyle(
+                  color:      colors.accent,
+                  fontSize:   11,
                   fontWeight: FontWeight.w700)),
         ),
         const SizedBox(width: 10),
@@ -307,8 +314,8 @@ class _RankRow extends StatelessWidget {
         Expanded(
           child: Text(snapshot.userName,
               style: TextStyle(
-                color: isFirst ? Colors.white : const Color(0xFFAAAAAA),
-                fontSize: 14,
+                color:      isFirst ? onSurface : colors.textSoft,
+                fontSize:   14,
                 fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
               )),
         ),
@@ -317,18 +324,16 @@ class _RankRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: snapshot.progress >= 1.0
-                ? const Color(0xFF00E676).withValues(alpha: 0.1)
-                : const Color(0xFF222222),
+            color: reached
+                ? colors.secondary.withValues(alpha: 0.12)
+                : colors.surfaceHigh,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             snapshot.progressLabel,
             style: TextStyle(
-              color: snapshot.progress >= 1.0
-                  ? const Color(0xFF00E676)
-                  : const Color(0xFF666666),
-              fontSize: 13,
+              color:      reached ? colors.secondary : colors.textSoft,
+              fontSize:   13,
               fontWeight: FontWeight.w700,
             ),
           ),

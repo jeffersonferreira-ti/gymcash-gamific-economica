@@ -5,6 +5,7 @@ import '../models/achievement_model.dart';
 import '../models/rank_model.dart';
 import '../services/achievement_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/theme_service.dart';
 
 class AchievementsScreen extends StatefulWidget {
   final String userId;
@@ -15,11 +16,11 @@ class AchievementsScreen extends StatefulWidget {
 }
 
 class _AchievementsScreenState extends State<AchievementsScreen> {
-  final _storage     = LocalStorageService();
+  final _storage      = LocalStorageService();
   late final _service = AchievementService(_storage);
 
   List<AchievementModel> _achievements = [];
-  double _total  = 0;
+  double _total   = 0;
   bool   _loading = true;
 
   @override
@@ -42,37 +43,37 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final rank     = RankModel.fromTotal(_total);
-    final nextRank = RankModel.nextRank(rank);
-    final progress = RankModel.progressToNext(_total);
-    final unlocked = _achievements.where((a) => a.isUnlocked).length;
+    final colors    = Theme.of(context).extension<GymCashColors>()!;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final rank      = RankModel.fromTotal(_total);
+    final nextRank  = RankModel.nextRank(rank);
+    final progress  = RankModel.progressToNext(_total);
+    final unlocked  = _achievements.where((a) => a.isUnlocked).length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0A),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('Conquistas',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        backgroundColor: colors.background,
+        title: const Text('Conquistas'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon:      const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: _loading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                  color: Color(0xFF00E676), strokeWidth: 2))
+                  color: colors.accent, strokeWidth: 2))
           : ListView(
               padding: const EdgeInsets.all(24),
               children: [
                 // ── Card de patente ────────────────────────────────────────
                 _RankCard(
-                  rank:      rank,
-                  nextRank:  nextRank,
-                  total:     _total,
-                  progress:  progress,
+                  rank:     rank,
+                  nextRank: nextRank,
+                  total:    _total,
+                  progress: progress,
+                  colors:   colors,
                 ),
 
                 const SizedBox(height: 20),
@@ -81,12 +82,14 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Conquistas',
-                        style: TextStyle(color: Colors.white,
-                            fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text('Conquistas',
+                        style: TextStyle(
+                            color:      onSurface,
+                            fontSize:   16,
+                            fontWeight: FontWeight.w700)),
                     Text('$unlocked / ${_achievements.length}',
-                        style: const TextStyle(color: Color(0xFF555555),
-                            fontSize: 14)),
+                        style: TextStyle(
+                            color: colors.textMuted, fontSize: 14)),
                   ],
                 ),
 
@@ -95,7 +98,8 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                 // ── Lista de conquistas ────────────────────────────────────
                 ..._achievements.map((a) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: _AchievementTile(achievement: a),
+                      child: _AchievementTile(
+                          achievement: a, colors: colors),
                     )),
               ],
             ),
@@ -103,23 +107,25 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 }
 
-// ── Card de patente atual + progresso ─────────────────────────────────────────
+// ── Card de patente ───────────────────────────────────────────────────────────
 class _RankCard extends StatelessWidget {
-  final RankModel  rank;
-  final RankModel? nextRank;
-  final double     total;
-  final double     progress;
-
   const _RankCard({
     required this.rank,
     required this.nextRank,
     required this.total,
     required this.progress,
+    required this.colors,
   });
 
+  final RankModel  rank;
+  final RankModel? nextRank;
+  final double     total;
+  final double     progress;
+  final GymCashColors colors;
+
   String _fmt(double v) {
-    final parts   = v.toStringAsFixed(0).split('');
-    final buf     = StringBuffer();
+    final parts = v.toStringAsFixed(0).split('');
+    final buf   = StringBuffer();
     for (int i = 0; i < parts.length; i++) {
       if (i > 0 && (parts.length - i) % 3 == 0) buf.write('.');
       buf.write(parts[i]);
@@ -129,7 +135,8 @@ class _RankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(rank.colorValue);
+    final color     = Color(rank.colorValue);
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -140,7 +147,7 @@ class _RankCard extends StatelessWidget {
             color.withValues(alpha: 0.04),
           ],
           begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          end:   Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.35)),
@@ -150,16 +157,21 @@ class _RankCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(rank.emoji, style: const TextStyle(fontSize: 36)),
+              Text(rank.emoji,
+                  style: const TextStyle(fontSize: 36)),
               const SizedBox(width: 14),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Sua patente',
-                      style: TextStyle(color: Color(0xFF888888),
-                          fontSize: 12, fontWeight: FontWeight.w500)),
+                  Text('Sua patente',
+                      style: TextStyle(
+                          color:      colors.textSoft,
+                          fontSize:   12,
+                          fontWeight: FontWeight.w500)),
                   Text(rank.title,
-                      style: TextStyle(color: color, fontSize: 24,
+                      style: TextStyle(
+                          color:      color,
+                          fontSize:   24,
                           fontWeight: FontWeight.w800)),
                 ],
               ),
@@ -167,11 +179,14 @@ class _RankCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text('Acumulado',
-                      style: TextStyle(color: Color(0xFF888888), fontSize: 11)),
+                  Text('Acumulado',
+                      style: TextStyle(
+                          color: colors.textSoft, fontSize: 11)),
                   Text(_fmt(total),
-                      style: const TextStyle(color: Colors.white,
-                          fontSize: 16, fontWeight: FontWeight.w700)),
+                      style: TextStyle(
+                          color:      onSurface,
+                          fontSize:   16,
+                          fontWeight: FontWeight.w700)),
                 ],
               ),
             ],
@@ -183,33 +198,36 @@ class _RankCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Próxima: ${nextRank!.emoji} ${nextRank!.title}',
-                    style: const TextStyle(color: Color(0xFF666666),
-                        fontSize: 12)),
+                    style: TextStyle(
+                        color: colors.textSoft, fontSize: 12)),
                 Text(_fmt(nextRank!.minAmount),
-                    style: const TextStyle(color: Color(0xFF555555),
-                        fontSize: 12)),
+                    style: TextStyle(
+                        color: colors.textMuted, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 6),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 6,
-                backgroundColor: const Color(0xFF222222),
-                valueColor: AlwaysStoppedAnimation<Color>(color),
+                value:           progress,
+                minHeight:       6,
+                backgroundColor: colors.border,
+                valueColor:      AlwaysStoppedAnimation<Color>(color),
               ),
             ),
           ] else ...[
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
+                color:        color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text('Patente máxima atingida!',
-                  style: TextStyle(color: color, fontSize: 12,
+                  style: TextStyle(
+                      color:      color,
+                      fontSize:   12,
                       fontWeight: FontWeight.w600)),
             ),
           ],
@@ -221,24 +239,28 @@ class _RankCard extends StatelessWidget {
 
 // ── Tile de conquista ─────────────────────────────────────────────────────────
 class _AchievementTile extends StatelessWidget {
+  const _AchievementTile({
+    required this.achievement,
+    required this.colors,
+  });
+
   final AchievementModel achievement;
-  const _AchievementTile({required this.achievement});
+  final GymCashColors    colors;
 
   @override
   Widget build(BuildContext context) {
-    final unlocked = achievement.isUnlocked;
+    final unlocked  = achievement.isUnlocked;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: unlocked
-            ? const Color(0xFF161616)
-            : const Color(0xFF111111),
+        color:        unlocked ? colors.surface : colors.cardDeep,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: unlocked
-              ? const Color(0xFF00E676).withValues(alpha: 0.2)
-              : const Color(0xFF1A1A1A),
+              ? colors.accent.withValues(alpha: 0.2)
+              : colors.border,
         ),
       ),
       child: Row(
@@ -248,16 +270,16 @@ class _AchievementTile extends StatelessWidget {
             width: 46, height: 46,
             decoration: BoxDecoration(
               color: unlocked
-                  ? const Color(0xFF00E676).withValues(alpha: 0.1)
-                  : const Color(0xFF1A1A1A),
+                  ? colors.highlight.withValues(alpha: 0.12)
+                  : colors.surfaceHigh,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: unlocked
                   ? Text(achievement.emoji,
                       style: const TextStyle(fontSize: 22))
-                  : const Icon(Icons.lock_outline_rounded,
-                      color: Color(0xFF333333), size: 20),
+                  : Icon(Icons.lock_outline_rounded,
+                      color: colors.textMuted, size: 20),
             ),
           ),
           const SizedBox(width: 14),
@@ -269,14 +291,13 @@ class _AchievementTile extends StatelessWidget {
               children: [
                 Text(achievement.title,
                     style: TextStyle(
-                      color: unlocked ? Colors.white : const Color(0xFF444444),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    )),
+                        color:      unlocked ? onSurface : colors.textMuted,
+                        fontSize:   14,
+                        fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
                 Text(achievement.description,
-                    style: const TextStyle(
-                        color: Color(0xFF555555), fontSize: 12)),
+                    style: TextStyle(
+                        color:   colors.textSoft, fontSize: 12)),
               ],
             ),
           ),
@@ -284,14 +305,17 @@ class _AchievementTile extends StatelessWidget {
           // Badge desbloqueado
           if (unlocked)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF00E676).withValues(alpha: 0.12),
+                color:        colors.highlight.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text('✓',
-                  style: TextStyle(color: Color(0xFF00E676),
-                      fontSize: 13, fontWeight: FontWeight.w700)),
+              child: Text('✓',
+                  style: TextStyle(
+                      color:      colors.highlight,
+                      fontSize:   13,
+                      fontWeight: FontWeight.w700)),
             ),
         ],
       ),

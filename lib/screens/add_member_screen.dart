@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import '../models/group_model.dart';
 import '../services/local_storage_service.dart';
+import '../services/theme_service.dart';
 
 class AddMemberScreen extends StatefulWidget {
   final String groupId;
@@ -30,35 +31,31 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         widget.groupId,
         _controller.text.trim(),
       );
-
       if (!mounted) return;
       Navigator.of(context).pop<GroupModel>(updated);
     } on LocalStorageException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFF2D1A1A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.4)),
-          ),
-        ),
-      );
+      _showError(e.message);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Não foi possível adicionar o membro. Tente novamente.',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError('Não foi possível adicionar o membro. Tente novamente.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content:         Text(msg),
+        behavior:        SnackBarBehavior.floating,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.4)),
+        ),
+      ),
+    );
   }
 
   @override
@@ -69,14 +66,15 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors    = Theme.of(context).extension<GymCashColors>()!;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark    = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0A),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('Adicionar membro',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        backgroundColor: colors.background,
+        title: const Text('Adicionar membro'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.of(context).pop(),
@@ -90,50 +88,28 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Nome do membro',
-                    style: TextStyle(color: Color(0xFF888888),
-                        fontSize: 13, fontWeight: FontWeight.w500)),
+                Text('Nome do membro',
+                    style: TextStyle(
+                        color:      colors.textSoft,
+                        fontSize:   13,
+                        fontWeight: FontWeight.w500)),
                 const SizedBox(height: 10),
 
                 TextFormField(
-                  controller: _controller,
-                  autofocus: true,
+                  controller:         _controller,
+                  autofocus:          true,
                   textCapitalization: TextCapitalization.words,
-                  style: const TextStyle(color: Colors.white, fontSize: 17),
+                  style: TextStyle(color: onSurface, fontSize: 17),
                   decoration: InputDecoration(
-                    hintText: 'Ex: João Silva',
-                    hintStyle: const TextStyle(color: Color(0xFF444444)),
-                    filled: true,
-                    fillColor: const Color(0xFF161616),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 18),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide:
-                            const BorderSide(color: Color(0xFF222222))),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide:
-                            const BorderSide(color: Color(0xFF222222))),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                            color: Color(0xFF00E676), width: 2)),
-                    errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                            color: Colors.redAccent, width: 2)),
-                    focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                            color: Colors.redAccent, width: 2)),
+                    hintText:  'Ex: João Silva',
+                    hintStyle: TextStyle(color: colors.textMuted),
                   ),
                   onFieldSubmitted: (_) => _add(),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
                       return 'Digite o nome do membro';
                     }
-                    if (value.trim().length < 2) return 'Nome muito curto';
+                    if (v.trim().length < 2) return 'Nome muito curto';
                     return null;
                   },
                 ),
@@ -145,20 +121,27 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                   child: ElevatedButton(
                     onPressed: _saving ? null : _add,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00E676),
-                      foregroundColor: Colors.black,
-                      disabledBackgroundColor:
-                          const Color(0xFF00E676).withValues(alpha: 0.4),
+                      backgroundColor:         colors.accent,
+                      foregroundColor:         isDark
+                          ? Colors.black
+                          : Colors.white,
+                      disabledBackgroundColor: colors.accent
+                          .withValues(alpha: 0.4),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
                       elevation: 0,
                     ),
                     child: _saving
-                        ? const SizedBox(width: 22, height: 22,
+                        ? SizedBox(
+                            width: 22, height: 22,
                             child: CircularProgressIndicator(
-                                color: Colors.black, strokeWidth: 2.5))
+                              color:       isDark ? Colors.black : Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
                         : const Text('Adicionar',
-                            style: TextStyle(fontSize: 17,
+                            style: TextStyle(
+                                fontSize:   17,
                                 fontWeight: FontWeight.w700)),
                   ),
                 ),

@@ -1,11 +1,11 @@
 // lib/screens/onboarding_screen.dart
-//
-// Atualizado: passa o 'id' ao criar UserModel.
 
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/local_storage_service.dart';
-import 'home_screen.dart';
+import '../services/theme_service.dart';
+import '../utils/id_generator.dart';
+import 'main_shell.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,11 +14,38 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with SingleTickerProviderStateMixin {
   final _controller = TextEditingController();
-  final _formKey    = GlobalKey<FormState>();
-  final _storage    = LocalStorageService();
-  bool _saving      = false;
+  final _formKey = GlobalKey<FormState>();
+  final _storage = LocalStorageService();
+  bool _saving = false;
+
+  late final AnimationController _animCtrl;
+  late final Animation<double> _fadeAnim;
+  late final Animation<Offset> _slideAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
+    _animCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<void> _continue() async {
     if (!_formKey.currentState!.validate()) return;
@@ -26,147 +53,168 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     try {
       final user = UserModel(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: IdGenerator.newId(),
         name: _controller.text.trim(),
       );
       await _storage.saveUser(user);
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen(user: user)),
+        MaterialPageRoute(builder: (_) => MainShell(user: user)),
       );
     } on LocalStorageException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFF2D1A1A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.4)),
-          ),
-        ),
-      );
+      _showError(e.message);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Não foi possível salvar seu nome. Tente novamente.',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError('Não foi possível salvar seu nome. Tente novamente.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _showError(String msg) {
+    final colors = Theme.of(context).extension<GymCashColors>()!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.4)),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<GymCashColors>()!;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 64, height: 64,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00E676),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Icon(Icons.fitness_center_rounded,
-                        color: Colors.black, size: 34),
-                  ),
-                  const SizedBox(height: 32),
-                  const Text('Olá!\nComo podemos\nte chamar?',
-                      style: TextStyle(color: Colors.white, fontSize: 34,
-                          fontWeight: FontWeight.w800, height: 1.2,
-                          letterSpacing: -0.5)),
-                  const SizedBox(height: 8),
-                  const Text('Seu nome aparecerá no painel do GymCash.',
-                      style: TextStyle(color: Color(0xFF666666), fontSize: 15)),
-                  const SizedBox(height: 40),
-                  TextFormField(
-                    controller: _controller,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.words,
-                    style: const TextStyle(color: Colors.white, fontSize: 18,
-                        fontWeight: FontWeight.w500),
-                    decoration: InputDecoration(
-                      hintText: 'Seu nome',
-                      hintStyle: const TextStyle(color: Color(0xFF444444)),
-                      filled: true,
-                      fillColor: const Color(0xFF161616),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 18),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF222222))),
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF222222))),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(
-                              color: Color(0xFF00E676), width: 2)),
-                      errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(
-                              color: Colors.redAccent, width: 2)),
-                      focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(
-                              color: Colors.redAccent, width: 2)),
-                    ),
-                    onFieldSubmitted: (_) => _continue(),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Digite pelo menos um nome';
-                      }
-                      if (value.trim().length < 2) return 'Nome muito curto';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity, height: 56,
-                    child: ElevatedButton(
-                      onPressed: _saving ? null : _continue,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00E676),
-                        foregroundColor: Colors.black,
-                        disabledBackgroundColor:
-                            const Color(0xFF00E676).withValues(alpha: 0.4),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                        elevation: 0,
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SlideTransition(
+                position: _slideAnim,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Logo
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: colors.accent,
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.accent.withValues(alpha: 0.35),
+                              blurRadius: 24,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.fitness_center_rounded,
+                          color: isDark ? Colors.black : Colors.white,
+                          size: 36,
+                        ),
                       ),
-                      child: _saving
-                          ? const SizedBox(width: 22, height: 22,
-                              child: CircularProgressIndicator(
-                                  color: Colors.black, strokeWidth: 2.5))
-                          : const Text('Continuar',
-                              style: TextStyle(fontSize: 17,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.2)),
-                    ),
+
+                      const SizedBox(height: 36),
+
+                      // Título
+                      Text(
+                        'Olá!\nComo podemos\nte chamar?',
+                        style: TextStyle(
+                          color: onSurface,
+                          fontSize: 34,
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Seu nome aparecerá no painel do GymCash.',
+                        style: TextStyle(color: colors.textSoft, fontSize: 15),
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      // Campo de nome
+                      TextFormField(
+                        controller: _controller,
+                        autofocus: true,
+                        textCapitalization: TextCapitalization.words,
+                        style: TextStyle(
+                          color: onSurface,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Seu nome',
+                          hintStyle: TextStyle(color: colors.textMuted),
+                        ),
+                        onFieldSubmitted: (_) => _continue(),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Digite pelo menos um nome';
+                          }
+                          if (v.trim().length < 2) return 'Nome muito curto';
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Botão continuar
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: _saving ? null : _continue,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colors.accent,
+                            foregroundColor:
+                                isDark ? Colors.black : Colors.white,
+                            disabledBackgroundColor:
+                                colors.accent.withValues(alpha: 0.4),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                          child: _saving
+                              ? SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: isDark ? Colors.black : Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text('Continuar',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.2,
+                                  )),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

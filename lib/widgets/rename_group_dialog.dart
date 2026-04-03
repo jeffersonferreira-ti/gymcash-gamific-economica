@@ -1,8 +1,7 @@
 // lib/widgets/rename_group_dialog.dart
-//
-// Diálogo para alterar o nome do grupo (roadmap v1.1).
 
 import 'package:flutter/material.dart';
+import '../services/theme_service.dart';
 
 /// Exibe campo de nome; retorna o texto salvo (trim) ou `null` se cancelar.
 Future<String?> showRenameGroupDialog(
@@ -10,7 +9,7 @@ Future<String?> showRenameGroupDialog(
   required String initialName,
 }) {
   return showDialog<String>(
-    context: context,
+    context:      context,
     barrierColor: Colors.black.withValues(alpha: 0.65),
     builder: (ctx) => _RenameGroupDialogBody(initialName: initialName),
   );
@@ -18,7 +17,6 @@ Future<String?> showRenameGroupDialog(
 
 class _RenameGroupDialogBody extends StatefulWidget {
   const _RenameGroupDialogBody({required this.initialName});
-
   final String initialName;
 
   @override
@@ -48,49 +46,47 @@ class _RenameGroupDialogBodyState extends State<_RenameGroupDialogBody> {
 
   @override
   Widget build(BuildContext context) {
+    final colors    = Theme.of(context).extension<GymCashColors>()!;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark    = Theme.of(context).brightness == Brightness.dark;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF161616),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      title: const Text(
+      backgroundColor: colors.surface,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18)),
+      title: Text(
         'Renomear grupo',
         style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-          fontSize: 18,
-        ),
+            color:      onSurface,
+            fontWeight: FontWeight.w700,
+            fontSize:   18),
       ),
       content: Form(
         key: _formKey,
         child: TextFormField(
-          controller: _controller,
-          autofocus: true,
+          controller:         _controller,
+          autofocus:          true,
           textCapitalization: TextCapitalization.words,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: TextStyle(color: onSurface, fontSize: 16),
           decoration: InputDecoration(
-            labelText: 'Nome do grupo',
-            labelStyle: const TextStyle(color: Color(0xFF888888)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF333333)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF00E676)),
-            ),
+            labelText:  'Nome do grupo',
+            labelStyle: TextStyle(color: colors.textSoft),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.redAccent.withValues(alpha: 0.8)),
+              borderSide: BorderSide(
+                  color: Colors.redAccent.withValues(alpha: 0.8)),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.redAccent.withValues(alpha: 0.8)),
+              borderSide: BorderSide(
+                  color: Colors.redAccent.withValues(alpha: 0.8)),
             ),
           ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) {
               return 'Digite um nome para o grupo.';
             }
-            if (value.trim().length > 80) {
+            if (v.trim().length > 80) {
               return 'Use no máximo 80 caracteres.';
             }
             return null;
@@ -101,24 +97,19 @@ class _RenameGroupDialogBodyState extends State<_RenameGroupDialogBody> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text(
-            'Cancelar',
-            style: TextStyle(color: Color(0xFF666666)),
-          ),
+          child: Text('Cancelar',
+              style: TextStyle(color: colors.textMuted)),
         ),
         FilledButton(
           onPressed: _submit,
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF00E676),
-            foregroundColor: Colors.black,
+            backgroundColor: colors.accent,
+            foregroundColor: isDark ? Colors.black : Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+                borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text(
-            'Salvar',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
+          child: const Text('Salvar',
+              style: TextStyle(fontWeight: FontWeight.w700)),
         ),
       ],
     );
