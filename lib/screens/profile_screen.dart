@@ -11,13 +11,13 @@ import '../models/user_model.dart';
 import '../services/achievement_service.dart';
 import '../services/local_storage_service.dart';
 import '../services/streak_service.dart';
+import '../services/theme_service.dart';
 import '../widgets/achievement_unlock_toast.dart';
 import '../widgets/evolution_chart.dart';
 import 'achievements_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, required this.user});
-
   final UserModel user;
 
   @override
@@ -27,14 +27,14 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final LocalStorageService _storage = LocalStorageService();
 
-  bool _loading = true;
+  bool    _loading      = true;
   String? _errorMessage;
 
-  double _totalAccumulated = 0;
-  int _streak = 0;
-  int _unlockedCount = 0;
-  RankModel? _rank;
-  List<ContributionModel> _contributions = [];
+  double                  _totalAccumulated = 0;
+  int                     _streak           = 0;
+  int                     _unlockedCount    = 0;
+  RankModel?              _rank;
+  List<ContributionModel> _contributions    = [];
 
   @override
   void initState() {
@@ -43,32 +43,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _errorMessage = null;
-    });
-
+    setState(() { _loading = true; _errorMessage = null; });
     try {
-      final total = await _storage.getTotalAccumulated(widget.user.id);
-      final streak =
-          await StreakService(_storage).calculateStreak(widget.user.id);
-      final newlyUnlocked =
-          await AchievementService(_storage).checkAndUnlock(widget.user.id);
-      final unlocked =
-          await AchievementService(_storage).unlockedCount(widget.user.id);
-      final rank = RankModel.fromTotal(total);
-      final allContribs = await _storage.getContributions();
-      final userContribs =
-          allContribs.where((c) => c.userId == widget.user.id).toList();
+      final total         = await _storage.getTotalAccumulated(widget.user.id);
+      final streak        = await StreakService(_storage).calculateStreak(widget.user.id);
+      final newlyUnlocked = await AchievementService(_storage).checkAndUnlock(widget.user.id);
+      final unlocked      = await AchievementService(_storage).unlockedCount(widget.user.id);
+      final rank          = RankModel.fromTotal(total);
+      final allContribs   = await _storage.getContributions();
+      final userContribs  = allContribs
+          .where((c) => c.userId == widget.user.id)
+          .toList();
 
       if (!mounted) return;
       setState(() {
         _totalAccumulated = total;
-        _streak = streak;
-        _unlockedCount = unlocked;
-        _rank = rank;
-        _contributions = userContribs;
-        _loading = false;
+        _streak           = streak;
+        _unlockedCount    = unlocked;
+        _rank             = rank;
+        _contributions    = userContribs;
+        _loading          = false;
       });
 
       if (newlyUnlocked.isNotEmpty) {
@@ -79,16 +73,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } on LocalStorageException catch (e) {
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _errorMessage = e.message;
-      });
+      setState(() { _loading = false; _errorMessage = e.message; });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _loading = false;
-        _errorMessage =
-            'Não foi possível carregar seu perfil. Verifique o armazenamento e tente novamente.';
+        _loading      = false;
+        _errorMessage = 'Não foi possível carregar seu perfil. Tente novamente.';
       });
     }
   }
@@ -104,61 +94,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<GymCashColors>()!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0A0A),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Perfil',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        backgroundColor:           colors.background,
+        automaticallyImplyLeading: false,
+        title: const Text('Perfil'),
       ),
       body: SafeArea(
         child: _loading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFF00E676),
-                  strokeWidth: 2,
-                ),
-              )
+                    color: colors.accent, strokeWidth: 2))
             : _errorMessage != null
-                ? _ProfileErrorState(message: _errorMessage!, onRetry: _load)
+                ? _ProfileErrorState(
+                    message: _errorMessage!, onRetry: _load, colors: colors)
                 : RefreshIndicator(
-                    color: const Color(0xFF00E676),
-                    backgroundColor: const Color(0xFF161616),
-                    onRefresh: _load,
+                    color:           colors.accent,
+                    backgroundColor: colors.surface,
+                    onRefresh:       _load,
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
                       children: [
-                        _ProfileHeader(user: widget.user),
+                        _ProfileHeader(user: widget.user, colors: colors),
                         const SizedBox(height: 24),
-                        _ProfileAccumulatedCard(total: _totalAccumulated),
+                        _ProfileAccumulatedCard(
+                            total: _totalAccumulated, colors: colors),
                         const SizedBox(height: 12),
-                        _ProfileStreakCard(streak: _streak),
+                        _ProfileStreakCard(streak: _streak, colors: colors),
                         const SizedBox(height: 12),
                         if (_rank != null)
                           _ProfileRankCard(
-                              rank: _rank!, total: _totalAccumulated),
+                              rank: _rank!, total: _totalAccumulated,
+                              colors: colors),
                         const SizedBox(height: 12),
                         _ProfileAchievementsCard(
                           unlocked: _unlockedCount,
-                          total: AchievementModel.all.length,
-                          onOpen: _openAchievements,
+                          total:    AchievementModel.all.length,
+                          colors:   colors,
+                          onOpen:   _openAchievements,
                         ),
                         const SizedBox(height: 20),
-                        // ── Gráficos ──────────────────────────────────────
-                        const _SectionTitle(title: 'Evolução'),
+                        _SectionTitle(title: 'Evolução', colors: colors),
                         const SizedBox(height: 12),
                         EvolutionChart(contributions: _contributions),
                         const SizedBox(height: 12),
-                        _MonthlyStatsCard(contributions: _contributions),
+                        _MonthlyStatsCard(
+                            contributions: _contributions, colors: colors),
                       ],
                     ),
                   ),
@@ -169,30 +154,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 // ── Título de seção ───────────────────────────────────────────────────────────
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-  final String title;
+  const _SectionTitle({required this.title, required this.colors});
+  final String        title;
+  final GymCashColors colors;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Container(
-          width: 3,
-          height: 16,
+          width: 3, height: 16,
           decoration: BoxDecoration(
-            color: const Color(0xFF00E676),
+            color:        colors.accent,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        Text(title,
+            style: TextStyle(
+                color:      Theme.of(context).colorScheme.onSurface,
+                fontSize:   16,
+                fontWeight: FontWeight.w700)),
       ],
     );
   }
@@ -200,71 +182,60 @@ class _SectionTitle extends StatelessWidget {
 
 // ── Card de estatísticas mensais ──────────────────────────────────────────────
 class _MonthlyStatsCard extends StatelessWidget {
-  const _MonthlyStatsCard({required this.contributions});
+  const _MonthlyStatsCard(
+      {required this.contributions, required this.colors});
   final List<ContributionModel> contributions;
+  final GymCashColors           colors;
 
   @override
   Widget build(BuildContext context) {
     if (contributions.isEmpty) return const SizedBox.shrink();
 
-    final months = contributions.map((c) => c.month).toSet().length;
-    final goalsHit = contributions.where((c) => c.progress >= 1.0).length;
+    final months      = contributions.map((c) => c.month).toSet().length;
+    final goalsHit    = contributions.where((c) => c.progress >= 1.0).length;
     final totalGroups = contributions.map((c) => c.groupId).toSet().length;
-    final avgProgress = contributions.isEmpty
-        ? 0.0
-        : contributions.fold(0.0, (s, c) => s + c.progress) /
-            contributions.length;
+    final avgProgress = contributions.fold(0.0, (s, c) => s + c.progress) /
+        contributions.length;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161616),
+        color:        colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF222222)),
+        border:       Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Resumo de contribuições',
-            style: TextStyle(
-              color: Color(0xFF888888),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Text('Resumo de contribuições',
+              style: TextStyle(
+                  color:      colors.textSoft,
+                  fontSize:   12,
+                  fontWeight: FontWeight.w500)),
           const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
                 child: _StatItem(
-                  value: '$months',
-                  label: 'Meses ativos',
-                  icon: Icons.calendar_month_outlined,
-                ),
+                    value: '$months', label: 'Meses ativos',
+                    icon: Icons.calendar_month_outlined, colors: colors),
               ),
               Expanded(
                 child: _StatItem(
-                  value: '$goalsHit',
-                  label: 'Metas atingidas',
-                  icon: Icons.flag_outlined,
-                  highlight: goalsHit > 0,
-                ),
+                    value: '$goalsHit', label: 'Metas atingidas',
+                    icon: Icons.flag_outlined, colors: colors,
+                    highlight: goalsHit > 0),
               ),
               Expanded(
                 child: _StatItem(
-                  value: '$totalGroups',
-                  label: 'Grupos ativos',
-                  icon: Icons.group_outlined,
-                ),
+                    value: '$totalGroups', label: 'Grupos ativos',
+                    icon: Icons.group_outlined, colors: colors),
               ),
               Expanded(
                 child: _StatItem(
-                  value: '${(avgProgress * 100).toStringAsFixed(0)}%',
-                  label: 'Média de progresso',
-                  icon: Icons.trending_up_rounded,
-                  highlight: avgProgress >= 1.0,
-                ),
+                    value: '${(avgProgress * 100).toStringAsFixed(0)}%',
+                    label: 'Média', icon: Icons.trending_up_rounded,
+                    colors: colors, highlight: avgProgress >= 1.0),
               ),
             ],
           ),
@@ -279,38 +250,31 @@ class _StatItem extends StatelessWidget {
     required this.value,
     required this.label,
     required this.icon,
+    required this.colors,
     this.highlight = false,
   });
-
-  final String value;
-  final String label;
-  final IconData icon;
-  final bool highlight;
+  final String        value;
+  final String        label;
+  final IconData      icon;
+  final GymCashColors colors;
+  final bool          highlight;
 
   @override
   Widget build(BuildContext context) {
-    final color = highlight ? const Color(0xFF00E676) : Colors.white;
+    final color = highlight
+        ? colors.highlight
+        : Theme.of(context).colorScheme.onSurface;
     return Column(
       children: [
         Icon(icon, color: color.withValues(alpha: 0.7), size: 18),
         const SizedBox(height: 6),
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
+        Text(value,
+            style: TextStyle(
+                color: color, fontSize: 18, fontWeight: FontWeight.w800)),
         const SizedBox(height: 2),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFF555555),
-            fontSize: 10,
-          ),
-        ),
+        Text(label,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors.textMuted, fontSize: 10)),
       ],
     );
   }
@@ -318,12 +282,18 @@ class _StatItem extends StatelessWidget {
 
 // ── Erro + retry ──────────────────────────────────────────────────────────────
 class _ProfileErrorState extends StatelessWidget {
-  const _ProfileErrorState({required this.message, required this.onRetry});
-  final String message;
+  const _ProfileErrorState({
+    required this.message,
+    required this.onRetry,
+    required this.colors,
+  });
+  final String               message;
   final Future<void> Function() onRetry;
+  final GymCashColors        colors;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -334,19 +304,20 @@ class _ProfileErrorState extends StatelessWidget {
         const SizedBox(height: 20),
         Text(message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Color(0xFFAAAAAA), fontSize: 15, height: 1.5)),
+            style: TextStyle(
+                color: colors.textSoft, fontSize: 15, height: 1.5)),
         const SizedBox(height: 28),
         FilledButton.icon(
           onPressed: () => onRetry(),
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Tentar novamente'),
+          icon:      const Icon(Icons.refresh_rounded),
+          label:     const Text('Tentar novamente'),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF00E676),
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            backgroundColor: colors.accent,
+            foregroundColor: isDark ? Colors.black : Colors.white,
+            padding: const EdgeInsets.symmetric(
+                vertical: 14, horizontal: 20),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
           ),
         ),
       ],
@@ -356,27 +327,28 @@ class _ProfileErrorState extends StatelessWidget {
 
 // ── Cabeçalho ─────────────────────────────────────────────────────────────────
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.user});
-  final UserModel user;
+  const _ProfileHeader({required this.user, required this.colors});
+  final UserModel     user;
+  final GymCashColors colors;
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Row(
       children: [
         Container(
-          width: 64,
-          height: 64,
+          width: 64, height: 64,
           decoration: BoxDecoration(
-            color: const Color(0xFF00E676).withValues(alpha: 0.15),
+            color:        colors.accent.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: const Color(0xFF00E676).withValues(alpha: 0.35)),
+                color: colors.accent.withValues(alpha: 0.35)),
           ),
           child: Center(
             child: Text(user.initials,
-                style: const TextStyle(
-                    color: Color(0xFF00E676),
-                    fontSize: 22,
+                style: TextStyle(
+                    color:      colors.accent,
+                    fontSize:   22,
                     fontWeight: FontWeight.w800)),
           ),
         ),
@@ -386,15 +358,16 @@ class _ProfileHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(user.name.trim(),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
+                  maxLines:  2,
+                  overflow:  TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color:      onSurface,
+                      fontSize:   20,
                       fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
-              const Text('Resumo da sua jornada',
-                  style: TextStyle(color: Color(0xFF555555), fontSize: 13)),
+              Text('Resumo da sua jornada',
+                  style: TextStyle(
+                      color: colors.textSoft, fontSize: 13)),
             ],
           ),
         ),
@@ -405,14 +378,16 @@ class _ProfileHeader extends StatelessWidget {
 
 // ── Acumulado ─────────────────────────────────────────────────────────────────
 class _ProfileAccumulatedCard extends StatelessWidget {
-  const _ProfileAccumulatedCard({required this.total});
-  final double total;
+  const _ProfileAccumulatedCard(
+      {required this.total, required this.colors});
+  final double        total;
+  final GymCashColors colors;
 
   static String _formatCurrency(double value) {
-    final parts = value.toStringAsFixed(2).split('.');
+    final parts   = value.toStringAsFixed(2).split('.');
     final intPart = parts[0];
-    final dec = parts[1];
-    final buffer = StringBuffer();
+    final dec     = parts[1];
+    final buffer  = StringBuffer();
     for (int i = 0; i < intPart.length; i++) {
       if (i > 0 && (intPart.length - i) % 3 == 0) buffer.write('.');
       buffer.write(intPart[i]);
@@ -422,50 +397,50 @@ class _ProfileAccumulatedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF00E676).withValues(alpha: 0.12),
-            const Color(0xFF00E676).withValues(alpha: 0.04),
+            colors.accent.withValues(alpha: 0.12),
+            colors.accent.withValues(alpha: 0.04),
           ],
           begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          end:   Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.25)),
+        border: Border.all(
+            color: colors.accent.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 44, height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFF00E676).withValues(alpha: 0.15),
+              color:        colors.accent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.savings_outlined,
-                color: Color(0xFF00E676), size: 22),
+            child: Icon(Icons.savings_outlined,
+                color: colors.accent, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Total acumulado (maratona)',
+                Text('Total acumulado (maratona)',
                     style: TextStyle(
-                        color: Color(0xFF888888),
-                        fontSize: 12,
+                        color:      colors.textSoft,
+                        fontSize:   12,
                         fontWeight: FontWeight.w500)),
                 const SizedBox(height: 4),
                 Text(_formatCurrency(total),
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
+                    style: TextStyle(
+                        color:         onSurface,
+                        fontSize:      22,
+                        fontWeight:    FontWeight.w800,
                         letterSpacing: -0.5)),
               ],
             ),
@@ -478,8 +453,9 @@ class _ProfileAccumulatedCard extends StatelessWidget {
 
 // ── Streak ────────────────────────────────────────────────────────────────────
 class _ProfileStreakCard extends StatelessWidget {
-  const _ProfileStreakCard({required this.streak});
-  final int streak;
+  const _ProfileStreakCard({required this.streak, required this.colors});
+  final int           streak;
+  final GymCashColors colors;
 
   String get _label {
     if (streak == 0) return 'Comece a contribuir este mês!';
@@ -489,77 +465,78 @@ class _ProfileStreakCard extends StatelessWidget {
 
   String get _emoji {
     if (streak == 0) return '💤';
-    if (streak < 3) return '🔥';
-    if (streak < 6) return '🔥🔥';
+    if (streak < 3)  return '🔥';
+    if (streak < 6)  return '🔥🔥';
     return '🔥🔥🔥';
   }
 
-  Color get _color {
-    if (streak == 0) return const Color(0xFF444444);
-    if (streak < 3) return const Color(0xFFFF6B35);
-    if (streak < 6) return const Color(0xFFFF4500);
+  Color get _fireColor {
+    if (streak == 0) return const Color(0xFF999999);
+    if (streak < 3)  return const Color(0xFFFF6B35);
+    if (streak < 6)  return const Color(0xFFFF4500);
     return const Color(0xFFFF2200);
   }
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         color: streak > 0
-            ? _color.withValues(alpha: 0.07)
-            : const Color(0xFF161616),
+            ? _fireColor.withValues(alpha: 0.07)
+            : colors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: streak > 0
-              ? _color.withValues(alpha: 0.3)
-              : const Color(0xFF1E1E1E),
+              ? _fireColor.withValues(alpha: 0.3)
+              : colors.border,
         ),
       ),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 44, height: 44,
             decoration: BoxDecoration(
-              color: _color.withValues(alpha: 0.12),
+              color:        _fireColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-                child: Text(_emoji, style: const TextStyle(fontSize: 20))),
+                child: Text(_emoji,
+                    style: const TextStyle(fontSize: 20))),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Sequência (streak)',
+                Text('Sequência (streak)',
                     style: TextStyle(
-                        color: Color(0xFF888888),
-                        fontSize: 12,
+                        color:      colors.textSoft,
+                        fontSize:   12,
                         fontWeight: FontWeight.w500)),
                 const SizedBox(height: 3),
                 Text(_label,
                     style: TextStyle(
-                        color:
-                            streak > 0 ? Colors.white : const Color(0xFF555555),
-                        fontSize: 16,
+                        color:      streak > 0 ? onSurface : colors.textMuted,
+                        fontSize:   16,
                         fontWeight: FontWeight.w700)),
               ],
             ),
           ),
           if (streak > 0)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _color.withValues(alpha: 0.15),
+                color:        _fireColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text('$streak',
                   style: TextStyle(
-                      color: _color,
-                      fontSize: 22,
+                      color:      _fireColor,
+                      fontSize:   22,
                       fontWeight: FontWeight.w800)),
             ),
         ],
@@ -570,14 +547,18 @@ class _ProfileStreakCard extends StatelessWidget {
 
 // ── Patente ───────────────────────────────────────────────────────────────────
 class _ProfileRankCard extends StatelessWidget {
-  const _ProfileRankCard({required this.rank, required this.total});
-  final RankModel rank;
-  final double total;
+  const _ProfileRankCard({
+    required this.rank,
+    required this.total,
+    required this.colors,
+  });
+  final RankModel     rank;
+  final double        total;
+  final GymCashColors colors;
 
   String _fmtInt(double v) {
-    final s = v.toStringAsFixed(0);
-    final parts = s.split('');
-    final buf = StringBuffer();
+    final parts = v.toStringAsFixed(0).split('');
+    final buf   = StringBuffer();
     for (int i = 0; i < parts.length; i++) {
       if (i > 0 && (parts.length - i) % 3 == 0) buf.write('.');
       buf.write(parts[i]);
@@ -587,8 +568,8 @@ class _ProfileRankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(rank.colorValue);
-    final next = RankModel.nextRank(rank);
+    final color    = Color(rank.colorValue);
+    final next     = RankModel.nextRank(rank);
     final progress = RankModel.progressToNext(total);
 
     return Container(
@@ -600,7 +581,7 @@ class _ProfileRankCard extends StatelessWidget {
             color.withValues(alpha: 0.04),
           ],
           begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          end:   Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.35)),
@@ -616,15 +597,15 @@ class _ProfileRankCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Patente atual',
+                    Text('Patente atual',
                         style: TextStyle(
-                            color: Color(0xFF888888),
-                            fontSize: 12,
+                            color:      colors.textSoft,
+                            fontSize:   12,
                             fontWeight: FontWeight.w500)),
                     Text(rank.title,
                         style: TextStyle(
-                            color: color,
-                            fontSize: 22,
+                            color:      color,
+                            fontSize:   22,
                             fontWeight: FontWeight.w800)),
                   ],
                 ),
@@ -637,21 +618,21 @@ class _ProfileRankCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Próxima: ${next.emoji} ${next.title}',
-                    style: const TextStyle(
-                        color: Color(0xFF666666), fontSize: 12)),
+                    style: TextStyle(
+                        color: colors.textSoft, fontSize: 12)),
                 Text(_fmtInt(next.minAmount),
-                    style: const TextStyle(
-                        color: Color(0xFF555555), fontSize: 12)),
+                    style: TextStyle(
+                        color: colors.textMuted, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 6),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 6,
-                backgroundColor: const Color(0xFF222222),
-                valueColor: AlwaysStoppedAnimation<Color>(color),
+                value:           progress,
+                minHeight:       6,
+                backgroundColor: colors.border,
+                valueColor:      AlwaysStoppedAnimation<Color>(color),
               ),
             ),
           ] else
@@ -659,8 +640,8 @@ class _ProfileRankCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 12),
               child: Text('Você alcançou a patente máxima.',
                   style: TextStyle(
-                      color: color.withValues(alpha: 0.9),
-                      fontSize: 13,
+                      color:      color.withValues(alpha: 0.9),
+                      fontSize:   13,
                       fontWeight: FontWeight.w600)),
             ),
         ],
@@ -674,63 +655,66 @@ class _ProfileAchievementsCard extends StatelessWidget {
   const _ProfileAchievementsCard({
     required this.unlocked,
     required this.total,
+    required this.colors,
     required this.onOpen,
   });
-  final int unlocked;
-  final int total;
+  final int          unlocked;
+  final int          total;
+  final GymCashColors colors;
   final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Material(
-      color: Colors.transparent,
+      color:        Colors.transparent,
       child: InkWell(
-        onTap: onOpen,
+        onTap:        onOpen,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFF161616),
+            color:        colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF222222)),
+            border:       Border.all(color: colors.border),
           ),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 44, height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00E676).withValues(alpha: 0.1),
+                  color:        colors.highlight.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.emoji_events_outlined,
-                    color: Color(0xFF00E676), size: 22),
+                child: Icon(Icons.emoji_events_outlined,
+                    color: colors.highlight, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Conquistas',
+                    Text('Conquistas',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
+                            color:      onSurface,
+                            fontSize:   16,
                             fontWeight: FontWeight.w700)),
                     const SizedBox(height: 2),
                     Text('$unlocked de $total desbloqueadas',
-                        style: const TextStyle(
-                            color: Color(0xFF666666), fontSize: 13)),
+                        style: TextStyle(
+                            color: colors.textSoft, fontSize: 13)),
                   ],
                 ),
               ),
-              const Text('Ver todas',
+              Text('Ver todas',
                   style: TextStyle(
-                      color: Color(0xFF00E676),
-                      fontSize: 13,
+                      color:      colors.accent,
+                      fontSize:   13,
                       fontWeight: FontWeight.w600)),
               const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded,
-                  color: Color(0xFF444444), size: 22),
+              Icon(Icons.chevron_right_rounded,
+                  color: colors.textMuted, size: 22),
             ],
           ),
         ),

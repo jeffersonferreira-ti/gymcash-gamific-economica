@@ -74,6 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   void _showError(String msg) {
+    // ignore: unused_local_variable
     final colors = Theme.of(context).extension<GymCashColors>()!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
